@@ -2,6 +2,8 @@
 
 /* טוקנים מהעיצוב — ראו docs/design-system.md. הפלטה כולה סביב גוון 300 */
 :root {
+  /* רוחב עמודת האפליקציה — ה-FAB נצמד לקצה שלה */
+  --app-w: 430px;
   --page: #e9e5de;
   --screen: #f7f4ef;
   --card: #fffdf8;
@@ -55,4 +57,10 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --app-w: 72rem;
+  }
 }

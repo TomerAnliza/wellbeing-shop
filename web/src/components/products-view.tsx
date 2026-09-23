@@ -26,7 +26,7 @@ export function ProductsView({ products }: { products: Product[] }) {
           </button>
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
         {shown.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
