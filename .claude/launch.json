@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "design",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "/Users/tomerbu/Dropbox/AI Engineering/AI_Integrators_Specialists/A600/Final_Project/wellbeing-app/design"],
+      "port": 8765
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/tomerbu/Dropbox/AI Engineering/AI_Integrators_Specialists/A600/Final_Project/wellbeing-app/web", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}

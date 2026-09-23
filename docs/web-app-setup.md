@@ -11,7 +11,7 @@
 |---|---|
 | Framework | Next.js 16 (App Router, TypeScript, `src/`) |
 | עיצוב | Tailwind CSS 4 |
-| גופן | Assistant מ-Google Fonts דרך `next/font`, עם תת-קבוצת עברית |
+| גופן | Rubik מ-Google Fonts דרך `next/font`, עם תת-קבוצת עברית (הוחלף מ-Assistant ב-23 בספטמבר 2026, לפי העיצוב) |
 | כיווניות | `<html lang="he" dir="rtl">` ב-`src/app/layout.tsx`, פעם אחת לכל הדפים |
 | דף בית | placeholder בעברית ב-`src/app/page.tsx`. יוחלף בדף התדמית מהאפיון |
 
@@ -63,7 +63,9 @@ npm run build
 
 ## משתני סביבה
 
-עדיין אין. כשייכנס Supabase, הוא יוגדר ב-Vercel דרך `vercel env`
+- `PRODUCTS_URL` — קטלוג החנות מ-n8n. ראו [web-shop.md](web-shop.md)
+
+לפני כן לא היו. כשייכנס Supabase, הוא יוגדר ב-Vercel דרך `vercel env`
 וב-`web/.env.local` מקומית. `.env*` חסום ב-`.gitignore`.
 
 ## מה הלאה

@@ -2,7 +2,7 @@
  "name": "wellbeing — בוט חנות בוואטסאפ",
  "nodes": [
   {
-   "id": "e137d119-7725-4e35-bb1f-6a61ae5aee71",
+   "id": "43b1d69e-d170-42bf-9bd6-56bc8f88ac1e",
    "name": "Meta — אימות webhook (GET)",
    "type": "n8n-nodes-base.webhook",
    "typeVersion": 2,
@@ -16,10 +16,10 @@
     "responseMode": "responseNode",
     "options": {}
    },
-   "webhookId": "19da46fa-e14d-49ac-b602-69b6e290c911"
+   "webhookId": "3eab15e4-cc34-48ec-8812-2422336e463c"
   },
   {
-   "id": "d0296d64-79d8-442f-86a9-88cd6aad618c",
+   "id": "84278035-2f6d-4fdc-8b07-3966da06547a",
    "name": "החזרת hub.challenge",
    "type": "n8n-nodes-base.respondToWebhook",
    "typeVersion": 1.4,
@@ -36,7 +36,7 @@
    }
   },
   {
-   "id": "688c3290-9496-4087-a3fe-9f7df1e4e8c2",
+   "id": "5cb022e2-f5b7-472b-a49b-15470265b419",
    "name": "וואטסאפ — הודעה נכנסת (POST)",
    "type": "n8n-nodes-base.webhook",
    "typeVersion": 2,
@@ -51,10 +51,10 @@
     "responseData": "noData",
     "options": {}
    },
-   "webhookId": "ed33239e-d19b-4716-91a8-a12b7a799a3d"
+   "webhookId": "5a1d4ac4-1538-48f5-9b05-6a97bcf1a96c"
   },
   {
-   "id": "1e36d96b-8c7e-4dea-bedb-255a31283e61",
+   "id": "560fcbe0-9fae-499d-bd4a-eef0bc175328",
    "name": "פענוח ההודעה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -67,7 +67,7 @@
    }
   },
   {
-   "id": "50c2854d-a988-4382-818e-d1ceffe9f9b3",
+   "id": "dfd5e10f-f9c0-4a5f-96c7-e20e41cdc455",
    "name": "customers — קריאה",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -99,7 +99,7 @@
    "executeOnce": true
   },
   {
-   "id": "dd55e988-a383-4fb0-b337-602df9ac5b8d",
+   "id": "34d6f505-104d-4033-a2ab-1103957b9422",
    "name": "זיהוי לקוח",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -112,7 +112,7 @@
    }
   },
   {
-   "id": "a346ff89-2802-44c5-91a8-13f3b8d9f5c7",
+   "id": "acfa0390-9e41-4bc3-a96b-e74c05dd0cbe",
    "name": "השלמת שם פרופיל?",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -125,7 +125,7 @@
    }
   },
   {
-   "id": "80e0a75a-77b4-43bb-8910-29e753d631e9",
+   "id": "d09a5275-591a-4929-b53e-dbd420d311b8",
    "name": "customers — השלמת שם פרופיל",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -166,7 +166,7 @@
    }
   },
   {
-   "id": "d775f830-5128-4770-adef-7682fd94f13b",
+   "id": "50746509-7b51-4700-bbd3-7d39e0b6f8ba",
    "name": "שלב הלקוח",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -182,7 +182,7 @@
    }
   },
   {
-   "id": "88d167cc-cad8-4116-a415-25f9f42fd0cc",
+   "id": "3e0abc9c-dbc4-4bfa-9e31-adf83913005d",
    "name": "שורת לקוח חדש",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -195,7 +195,7 @@
    }
   },
   {
-   "id": "e2986c26-7d17-4559-a2ba-bf656f0e8a51",
+   "id": "f3eb830b-44af-4c05-b80f-4421128f2882",
    "name": "customers — לקוח חדש",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -234,7 +234,7 @@
    }
   },
   {
-   "id": "49669f0f-85aa-4985-813d-ecde0fa28d9f",
+   "id": "066bc5f0-bec4-4588-8f35-8be011993873",
    "name": "הודעת פתיחה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -247,7 +247,7 @@
    }
   },
   {
-   "id": "5760ea76-0524-4bea-931b-b16207a8b725",
+   "id": "3d4b0bcd-3fca-4469-9bae-38fdf1e4321c",
    "name": "חילוץ שם",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -276,7 +276,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "08da0d39-1e27-4e46-a46f-05e2b31eb980",
+   "id": "63d2f3a0-e413-4f7e-9d4d-9d791d44b432",
    "name": "בדיקת שם",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -289,7 +289,7 @@
    }
   },
   {
-   "id": "9b3463ba-6ed2-4637-9143-a790c87dca71",
+   "id": "cd45305a-54c2-4770-8a75-a2c5e1e250dd",
    "name": "שדות לעדכון",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -302,7 +302,7 @@
    }
   },
   {
-   "id": "6ab36a2d-f1be-4f24-b7ca-1406968ca181",
+   "id": "18d02cb2-e9e3-4ed3-a24e-b82588437dcc",
    "name": "customers — עדכון שם",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -343,7 +343,7 @@
    }
   },
   {
-   "id": "b0dd1521-e040-4df4-9ba9-670b90f4dfcb",
+   "id": "c3bbe839-81dd-4af4-a1d2-5870f4f54f75",
    "name": "ברכה ותפריט",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -356,7 +356,7 @@
    }
   },
   {
-   "id": "7807b20c-e23d-4098-8d24-c09779f68fae",
+   "id": "20e47a21-7dc3-4b44-95fd-94125a5cd708",
    "name": "products — קטלוג",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -388,7 +388,7 @@
    "executeOnce": true
   },
   {
-   "id": "0a866e9e-27f6-47b4-b9b0-9b7ad167a656",
+   "id": "68242569-7ffa-4ecd-97dc-53ea926aa420",
    "name": "הקשר ובחירה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -397,11 +397,11 @@
     260
    ],
    "parameters": {
-    "jsCode": "const who = $('זיהוי לקוח').first().json;\n\nfunction ctxStore() {\n  const s = $getWorkflowStaticData('global');\n  s.ctx = s.ctx || {};\n  return s.ctx;\n}\n\n// הקטלוג (רק מוצרים פעילים) וההקשר מוצמדים לכל הודעה של לקוח מוכר\nconst catalog = $input.all().map(i => i.json)\n  .filter(p => p.id && String(p.active).trim() === 'כן')\n  .map(p => ({ id: String(p.id), name: String(p.name), category: String(p.category),\n               description: String(p.description), price: Number(p.price_ils), stock: Number(p.stock),\n               image: String(p.image || '').trim() }));\nconst ctx = ctxStore()[who.phone] || {};\nconst ctxProduct = ctx.at && Date.now() - ctx.at < 24 * 3600e3 ? ctx.product : null;\n// כפתורים ורשימות מחזירים מזהה עם קידומת — כך יודעים מה נלחץ בלי לשאול את המודל\nconst id = String(who.replyId || '');\nlet action = 'classify', route = null, product = null, qty = 1;\nif (id.startsWith('route_'))        { action = 'route';   route = id.slice(6); }\nelse if (id.startsWith('prod_'))    { action = 'product'; product = id.slice(5); }\nelse if (id.startsWith('order_'))   { action = 'order';   product = id.slice(6); }\nelse if (id.startsWith('confirm_')) {\n  // confirm_P-001_q2 → מוצר P-001, כמות 2\n  action = 'confirm'; const m = id.slice(8).match(/^(.+?)(?:_q(\\d+))?$/);\n  product = m[1]; qty = Number(m[2] || 1);\n}\nelse if (id === 'cancel')           { action = 'cancel'; }\n// זיכרון שיחה: 8 ההודעות האחרונות של המספר (נכתבות ב\"רישום שיחה\"), ל-24 שעות\nconst hist = (($getWorkflowStaticData('global').hist || {})[who.phone] || [])\n  .filter(h => Date.now() - h.at < 24 * 3600e3).slice(-8);\nconst history = hist.map(h => (h.role === 'user' ? 'לקוח: ' : 'בוט: ') + h.text.replace(/\\s+/g, ' ').slice(0, 300)).join('\\n');\nreturn [{ json: { ...who, action, route, product, qty, ctxProduct, catalog, history, fromMenu: action === 'route' } }];\n"
+    "jsCode": "const who = $('זיהוי לקוח').first().json;\n\nfunction ctxStore() {\n  const s = $getWorkflowStaticData('global');\n  s.ctx = s.ctx || {};\n  return s.ctx;\n}\n\n// הקטלוג (רק מוצרים פעילים) וההקשר מוצמדים לכל הודעה של לקוח מוכר\nconst catalog = $input.all().map(i => i.json)\n  .filter(p => p.id && String(p.active).trim() === 'כן')\n  .map(p => ({ id: String(p.id), name: String(p.name), category: String(p.category),\n               description: String(p.description), price: Number(p.price_ils), stock: Number(p.stock),\n               image: String(p.image || '').trim() }));\nconst ctx = ctxStore()[who.phone] || {};\nconst ctxProduct = ctx.at && Date.now() - ctx.at < 24 * 3600e3 ? ctx.product : null;\n// כפתורים ורשימות מחזירים מזהה עם קידומת — כך יודעים מה נלחץ בלי לשאול את המודל\nconst id = String(who.replyId || '');\nlet action = 'classify', route = null, product = null, qty = 1;\nif (id.startsWith('route_'))        { action = 'route';   route = id.slice(6); }\nelse if (id.startsWith('prod_'))    { action = 'product'; product = id.slice(5); }\nelse if (id.startsWith('order_'))   { action = 'order';   product = id.slice(6); }\nelse if (id.startsWith('confirm_')) {\n  // confirm_P-001_q2 → מוצר P-001, כמות 2\n  action = 'confirm'; const m = id.slice(8).match(/^(.+?)(?:_q(\\d+))?$/);\n  product = m[1]; qty = Number(m[2] || 1);\n}\nelse if (id === 'cancel')           { action = 'cancel'; }\nelse {\n  // \"שאל בוואטסאפ\" מהאתר שולח \"שאלה על <מוצר> (P-004)\" — קוד מוצר מוכר = כרטיס המוצר מיד\n  const code = String(who.text || '').match(/\\((P-\\d{3})\\)/);\n  if (code && catalog.some(p => p.id === code[1])) { action = 'product'; product = code[1]; }\n}\n// זיכרון שיחה: 8 ההודעות האחרונות של המספר (נכתבות ב\"רישום שיחה\"), ל-24 שעות\nconst hist = (($getWorkflowStaticData('global').hist || {})[who.phone] || [])\n  .filter(h => Date.now() - h.at < 24 * 3600e3).slice(-8);\nconst history = hist.map(h => (h.role === 'user' ? 'לקוח: ' : 'בוט: ') + h.text.replace(/\\s+/g, ' ').slice(0, 300)).join('\\n');\nreturn [{ json: { ...who, action, route, product, qty, ctxProduct, catalog, history, fromMenu: action === 'route' } }];\n"
    }
   },
   {
-   "id": "60716f6d-24cf-4aaf-b93d-5c9256c74ff2",
+   "id": "4253eee2-2445-4054-af11-bd55637a66e4",
    "name": "פעולה",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -417,7 +417,7 @@
    }
   },
   {
-   "id": "24a4657f-3f45-4b0f-8586-77c461be3994",
+   "id": "27b5fc75-ed65-4d0a-bcea-70c776648339",
    "name": "פקיד קבלה — סיווג",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -446,7 +446,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "56cdd412-2386-43ee-b9d6-97cf7e76f30f",
+   "id": "3f802ed6-419c-41b6-9c5c-550d17617496",
    "name": "מסלול מהסיווג",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -459,7 +459,7 @@
    }
   },
   {
-   "id": "d5a1c3ba-2af0-45f7-b5f5-e7f8ee4e467e",
+   "id": "37023023-686e-4014-bd13-0c1849310a3a",
    "name": "ניתוב",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -475,7 +475,7 @@
    }
   },
   {
-   "id": "e880f7b0-8630-4d6d-b95b-dc874792d36a",
+   "id": "ef3ee77b-096e-40a5-85b3-74a03fc53590",
    "name": "סוכן מכירות",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -504,7 +504,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "bbe5a991-ea81-4d30-85ce-7148dc742366",
+   "id": "ccd7f2b1-fa34-4f2c-8567-1aab28622861",
    "name": "תשובת מכירות",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -517,7 +517,7 @@
    }
   },
   {
-   "id": "40313eb9-79d6-4d7a-a994-cf620e595734",
+   "id": "1a907760-68ae-425d-9260-cf13bca2c945",
    "name": "פרטי מוצר",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -530,7 +530,7 @@
    }
   },
   {
-   "id": "23980d8e-ce99-4c52-b619-d7784d6d0b92",
+   "id": "301cf34c-79bd-4d55-a446-b866a37f859f",
    "name": "סיכום הזמנה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -543,7 +543,7 @@
    }
   },
   {
-   "id": "851a004a-4eae-42c3-8530-cded4b212812",
+   "id": "3f9a7b73-6d7f-431c-83be-1354417023db",
    "name": "שורת הזמנה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -556,7 +556,7 @@
    }
   },
   {
-   "id": "5abc8132-4a39-4a5b-a603-ccfcf91c1f7b",
+   "id": "e731512d-39c5-4ec7-85cd-5b881fb8bdf8",
    "name": "הזמנה תקינה?",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -572,7 +572,7 @@
    }
   },
   {
-   "id": "9b5afa7c-7663-44cc-a93c-9952086d5704",
+   "id": "bd6c4647-0819-45e4-82f7-4742d68158cd",
    "name": "שדות הזמנה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -585,7 +585,7 @@
    }
   },
   {
-   "id": "61f6edb7-e8a9-4180-8ad3-f815dc95b80a",
+   "id": "32368367-ef12-47a9-88e3-4e8ff2caf592",
    "name": "orders — הזמנה חדשה",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -623,7 +623,7 @@
    }
   },
   {
-   "id": "ad38b3c5-23c4-4d7b-a72d-e38aaa9dffb7",
+   "id": "519f442d-fdf9-4167-b8b9-6c390f04c2e1",
    "name": "מלאי חדש",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -636,7 +636,7 @@
    }
   },
   {
-   "id": "3a58bb2a-d67a-4aa0-9403-49e434f0c66a",
+   "id": "ed199cf8-2e08-4089-bed7-9bc5d6179873",
    "name": "products — עדכון מלאי",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -677,7 +677,7 @@
    }
   },
   {
-   "id": "af6fffe8-c71d-44d7-8ca6-c5ed0fded325",
+   "id": "dbd39a37-407b-4afd-a8bc-bb00dda0c622",
    "name": "אישור הזמנה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -690,7 +690,7 @@
    }
   },
   {
-   "id": "ed35ac86-b591-4ec7-9d74-628f776c6e12",
+   "id": "8ca9b608-cc8b-40bb-9c9b-77a282ae8fd3",
    "name": "הזמנה נכשלה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -703,7 +703,7 @@
    }
   },
   {
-   "id": "b1ec1b3a-eb9f-4306-af9e-85c87815032a",
+   "id": "0afdf917-944c-4bfb-a6c2-168aeee2f314",
    "name": "ביטול הזמנה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -716,7 +716,7 @@
    }
   },
   {
-   "id": "65f12511-f180-4031-b48c-e867dec32bfe",
+   "id": "520a5529-8bff-4c87-9c51-64b98f067363",
    "name": "יש פירוט לפנייה?",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -732,7 +732,7 @@
    }
   },
   {
-   "id": "498ebc28-14dc-458a-a1a3-f924b37025d0",
+   "id": "726b4209-ea97-4b7e-b01a-8d7a0fcb6725",
    "name": "בקשת פירוט",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -745,7 +745,7 @@
    }
   },
   {
-   "id": "d5d4eff9-b7f4-4885-9dad-66de9cf73b1b",
+   "id": "fef7e0a7-4e3b-40a6-bf80-09c8a680f689",
    "name": "שורת פנייה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -758,7 +758,7 @@
    }
   },
   {
-   "id": "fb045cdf-6942-47ca-a87e-fc698d121eca",
+   "id": "0aa56e90-e2ae-46cb-a999-e3ac5e300172",
    "name": "orders — פנייה חדשה",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -796,7 +796,7 @@
    }
   },
   {
-   "id": "60e9f50a-76ef-4827-9936-548af687b7cb",
+   "id": "d82d2abb-9b36-47bc-b0ef-f7595ec44171",
    "name": "אישור פנייה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -809,7 +809,7 @@
    }
   },
   {
-   "id": "32c15b8f-9d44-462e-9b57-d717fc90a73c",
+   "id": "97dca6cd-c2dc-4da6-9e66-fa32711f8523",
    "name": "יועץ כושר",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -838,7 +838,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "8c75af64-0e88-42f6-adff-7fd03aaa2ce7",
+   "id": "b469c3f1-cee1-458c-ba26-aca4d99f88c3",
    "name": "תשובת כושר",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -851,7 +851,7 @@
    }
   },
   {
-   "id": "ccb012f2-36fd-4b63-a887-448154f8d0ec",
+   "id": "d0104986-92de-4807-bd85-f878558d6512",
    "name": "orders — קריאה",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -883,7 +883,7 @@
    "executeOnce": true
   },
   {
-   "id": "39ea8b36-572b-4d6c-ae48-3e49cbddd939",
+   "id": "78561c44-e6cd-4a44-827d-b06cbf732f46",
    "name": "סטטוס משלוח",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -896,7 +896,7 @@
    }
   },
   {
-   "id": "fe14933f-c0ce-43e3-991f-3002049332c9",
+   "id": "2025774e-5ddf-474c-a9ee-cf4e3d5f5af0",
    "name": "קישור הרשמה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -909,7 +909,7 @@
    }
   },
   {
-   "id": "52279906-6672-45ff-beca-c58b84787d40",
+   "id": "593b3055-f13e-485f-9e50-d25c55384284",
    "name": "שאלת הבהרה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -922,7 +922,7 @@
    }
   },
   {
-   "id": "e75aa115-5cc9-42c7-8ee7-7b5e67a2251e",
+   "id": "59cc55eb-9c7f-4ffb-ac2e-978218abef38",
    "name": "בניית הודעת וואטסאפ",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -935,7 +935,7 @@
    }
   },
   {
-   "id": "0081be67-531b-41b9-8a7a-d505421ec25a",
+   "id": "a8d8425f-149d-4536-b2f1-5a95c2f0fdbd",
    "name": "שליחה בוואטסאפ",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -964,7 +964,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "6c531a8a-0864-4b30-aacd-d1e7ab8ddd53",
+   "id": "7baf031a-1505-49c5-9137-2cd9cf51de81",
    "name": "רישום שיחה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -977,7 +977,7 @@
    }
   },
   {
-   "id": "859bc4b0-e911-4f14-9c6b-2c3c02d27f1e",
+   "id": "974bcc8f-38d4-410c-9a68-1745d0d27487",
    "name": "chat_log — רישום",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -1015,7 +1015,7 @@
    }
   },
   {
-   "id": "7055d71e-cc74-4ceb-a7ad-43da5c43ae21",
+   "id": "ce866a55-3d1c-4670-b1f1-a1f429a9e71f",
    "name": "הסבר",
    "type": "n8n-nodes-base.stickyNote",
    "typeVersion": 1,

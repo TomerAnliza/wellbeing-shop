@@ -277,6 +277,11 @@ else if (id.startsWith('confirm_')) {
   product = m[1]; qty = Number(m[2] || 1);
 }
 else if (id === 'cancel')           { action = 'cancel'; }
+else {
+  // "שאל בוואטסאפ" מהאתר שולח "שאלה על <מוצר> (P-004)" — קוד מוצר מוכר = כרטיס המוצר מיד
+  const code = String(who.text || '').match(/\((P-\d{3})\)/);
+  if (code && catalog.some(p => p.id === code[1])) { action = 'product'; product = code[1]; }
+}
 // זיכרון שיחה: 8 ההודעות האחרונות של המספר (נכתבות ב"רישום שיחה"), ל-24 שעות
 const hist = (($getWorkflowStaticData('global').hist || {})[who.phone] || [])
   .filter(h => Date.now() - h.at < 24 * 3600e3).slice(-8);

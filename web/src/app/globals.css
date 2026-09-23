@@ -1,25 +1,58 @@
 @import "tailwindcss";
 
+/* טוקנים מהעיצוב — ראו docs/design-system.md. הפלטה כולה סביב גוון 300 */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --page: #e9e5de;
+  --screen: #f7f4ef;
+  --card: #fffdf8;
+  --card-border: rgba(28, 27, 25, 0.07);
+  --ink: #1c1b19;
+  --ink-2: rgba(28, 27, 25, 0.5);
+  --ink-3: rgba(28, 27, 25, 0.45);
+  --brand: oklch(0.62 0.13 300);
+  --brand-hover: oklch(0.55 0.13 300);
+  --brand-icon: oklch(0.52 0.13 300);
+  --brand-soft: oklch(0.95 0.025 300);
+  --brand-soft-ink: oklch(0.4 0.05 300);
+  --brand-neutral: oklch(0.9 0.03 300);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-assistant), system-ui, sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-page: var(--page);
+  --color-screen: var(--screen);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-icon: var(--brand-icon);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-soft-ink: var(--brand-soft-ink);
+  --color-brand-neutral: var(--brand-neutral);
+  --font-sans: var(--font-rubik), system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--page);
+  color: var(--ink);
   font-family: var(--font-sans);
+}
+
+/* אייקוני Material Symbols Rounded — ליגטורות, ולכן תמיד LTR בתוך הטקסט העברי */
+.ms {
+  font-family: "Material Symbols Rounded";
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
 }
