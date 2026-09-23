@@ -7,7 +7,11 @@ TICKETS_SHEET_ID = '11HaiHwuVyGoqmf7zss8d5iwnn2B8CG0hvIfkuGqej2Q'  # פניות 
 GS_CRED = {'googleSheetsOAuth2Api': {'id': 'Bsc5ulPj2pt9pUPV', 'name': 'tomer_analiza_google_sheets'}}
 AI_CRED = {'openAiApi': {'id': '5Ww4GeJzKnSYMPmv', 'name': 'a601_openai'}}
 WA_CRED = {'httpHeaderAuth': {'id': 'Cm2UtQogNOYbj6nJ', 'name': 'WhatsApp Cloud API — wellbeing shop bot'}}
-GRAPH = f"https://graph.facebook.com/{os.environ['WA_GRAPH_VERSION']}/{os.environ['WA_PHONE_ID']}/messages"
+GRAPH_BASE = f"https://graph.facebook.com/{os.environ['WA_GRAPH_VERSION']}"
+GRAPH = f"{GRAPH_BASE}/{os.environ['WA_PHONE_ID']}/messages"
+SB_CRED = {'httpHeaderAuth': {'id': os.environ['N8N_SUPABASE_CRED_ID'], 'name': 'Supabase — wellbeing storage (secret)'}}
+SB_STORAGE = 'https://owvvkwxzjuglrfeuujez.supabase.co/storage/v1'
+SB_BUCKET = 'support-media'   # פרטי — תמונות לקוחות (docs/spec-shop-and-agent.md)
 VERIFY = os.environ['META_VERIFY_TOKEN']
 MODEL = 'gpt-4o-mini'
 PATH = 'wellbeing-shop-bot'
@@ -123,16 +127,17 @@ for (const item of $input.all()) {
       const v = ch.value ?? {};
       const contact = (v.contacts ?? [])[0] ?? {};
       for (const m of v.messages ?? []) {
-        let text = '', replyId = '';
+        let text = '', replyId = '', mediaId = '', caption = '';
         if (m.type === 'text') text = m.text?.body ?? '';
         else if (m.type === 'interactive') {
           const r = m.interactive?.list_reply ?? m.interactive?.button_reply ?? {};
           replyId = r.id ?? ''; text = r.title ?? '';
         } else if (m.type === 'button') { text = m.button?.text ?? ''; replyId = m.button?.payload ?? ''; }
+        else if (m.type === 'image') { text = m.image?.caption || '(תמונה)'; mediaId = m.image?.id ?? ''; caption = m.image?.caption ?? ''; }
         else text = '[' + m.type + ']';
         out.push({ json: {
           phone: String(m.from ?? '').replace(/\D/g, ''),
-          text: String(text).trim(), replyId, type: m.type, message_id: m.id,
+          text: String(text).trim(), replyId, type: m.type, message_id: m.id, media_id: mediaId, caption,
           profile_name: contact.profile?.name ?? '',
           received_at: $now.setZone('Asia/Jerusalem').toFormat('yyyy-MM-dd HH:mm:ss')
         }});
@@ -278,6 +283,8 @@ else if (id.startsWith('confirm_')) {
   product = m[1]; qty = Number(m[2] || 1);
 }
 else if (id === 'cancel')           { action = 'cancel'; }
+// תמונה מלקוח מוכר = פנייה לשירות (מוצר פגום, חבילה). נשמרת בדלי פרטי ב-Supabase
+else if (who.type === 'image' && who.media_id) { action = 'image'; }
 else {
   // "שאל בוואטסאפ" מהאתר שולח "שאלה על <מוצר> (P-004)" — קוד מוצר מוכר = כרטיס המוצר מיד
   const code = String(who.text || '').match(/\((P-\d{3})\)/);
@@ -291,7 +298,7 @@ return [{ json: { ...who, action, route, product, qty, ctxProduct, catalog, hist
 """, [x + 1560, y + 260])
 link('products — קטלוג', 'הקשר ובחירה')
 
-switch('פעולה', 6, "={{ ['route', 'product', 'order', 'confirm', 'cancel', 'classify'].indexOf($json.action) }}",
+switch('פעולה', 7, "={{ ['route', 'product', 'order', 'confirm', 'cancel', 'classify', 'image'].indexOf($json.action) }}",
        [x + 1820, y + 260])
 link('הקשר ובחירה', 'פעולה')
 
@@ -491,6 +498,98 @@ return [{ json: { phone: who.phone, kind: 'text', route: 'support',
 """, [R + 780, y + 280])
 link('tickets — פנייה חדשה', 'אישור פנייה')
 
+
+# ─── תמונה מלקוח → Supabase (דלי פרטי) → פנייה בגיליון השירות ─────────
+IX, IY = 5200, 1900
+node('מדיה — כתובת', 'n8n-nodes-base.httpRequest', 4.2,
+     {'method': 'GET', 'url': '=' + GRAPH_BASE + '/{{ $json.media_id }}',
+      'authentication': 'genericCredentialType', 'genericAuthType': 'httpHeaderAuth', 'options': {'timeout': 20000}},
+     [IX, IY], credentials=WA_CRED, onError='continueRegularOutput')
+link('פעולה', 'מדיה — כתובת', 6)
+# הקישור מ-Meta זמני ודורש את אותו טוקן. ההורדה נשמרת כקובץ בינארי בשדה data
+node('מדיה — הורדה', 'n8n-nodes-base.httpRequest', 4.2,
+     {'method': 'GET', 'url': '={{ $json.url }}',
+      'authentication': 'genericCredentialType', 'genericAuthType': 'httpHeaderAuth',
+      'options': {'timeout': 30000, 'response': {'response': {'responseFormat': 'file', 'outputPropertyName': 'data'}}}},
+     [IX + 260, IY], credentials=WA_CRED, onError='continueRegularOutput')
+link('מדיה — כתובת', 'מדיה — הורדה')
+# נתיב: <טלפון>/<מזהה ההודעה>.<סיומת>. x-upsert — הרצה חוזרת על אותה הודעה לא נכשלת
+node('Supabase — העלאה', 'n8n-nodes-base.httpRequest', 4.2,
+     {'method': 'POST',
+      'url': '=' + SB_STORAGE + '/object/' + SB_BUCKET + "/{{ $('זיהוי לקוח').first().json.phone }}/{{ $('זיהוי לקוח').first().json.message_id.replace(/[^A-Za-z0-9]/g, '') }}.{{ ($binary.data?.mimeType || 'image/jpeg').split('/')[1].replace('jpeg', 'jpg') }}",
+      'authentication': 'genericCredentialType', 'genericAuthType': 'httpHeaderAuth',
+      'sendHeaders': True, 'headerParameters': {'parameters': [
+          {'name': 'Content-Type', 'value': "={{ $binary.data?.mimeType || 'image/jpeg' }}"},
+          {'name': 'x-upsert', 'value': 'true'}]},
+      'sendBody': True, 'contentType': 'binaryData', 'inputDataFieldName': 'data', 'options': {'timeout': 30000}},
+     [IX + 520, IY], credentials=SB_CRED, onError='continueRegularOutput')
+link('מדיה — הורדה', 'Supabase — העלאה')
+# קישור חתום ל-30 יום: הדלי פרטי, והנציג צריך לראות את התמונה מהגיליון ומהמייל
+node('Supabase — קישור חתום', 'n8n-nodes-base.httpRequest', 4.2,
+     {'method': 'POST', 'url': '=' + SB_STORAGE + '/object/sign/{{ $json.Key }}',
+      'authentication': 'genericCredentialType', 'genericAuthType': 'httpHeaderAuth',
+      'sendBody': True, 'specifyBody': 'json', 'jsonBody': '{ "expiresIn": 2592000 }', 'options': {'timeout': 20000}},
+     [IX + 780, IY], credentials=SB_CRED, onError='continueRegularOutput')
+link('Supabase — העלאה', 'Supabase — קישור חתום')
+code('פנייה עם תמונה', WHO + r"""
+// תמונה תוך 30 דקות מפתיחת פנייה מצטרפת אליה; אחרת נפתחת פנייה חדשה.
+// אם ההורדה או ההעלאה נכשלו — הפנייה נפתחת בכל זאת, עם הערה, והנציג יבקש שוב
+const up = $('Supabase — העלאה').first().json;
+const sig = $input.first().json;
+const path = up.Key ? String(up.Key).replace(/^""" + SB_BUCKET + r"""\//, '') : '';
+const url = sig.signedURL ? '""" + SB_STORAGE + r"""' + sig.signedURL : '';
+const s = $getWorkflowStaticData('global');
+s.tickets = s.tickets || {};
+const open = s.tickets[who.phone];
+const append = !!(open && Date.now() - open.at < 30 * 60e3);
+const ticket_id = append ? open.id : 'S-' + Date.now();
+s.tickets[who.phone] = { id: ticket_id, at: Date.now() };
+return [{ json: { mode: append ? 'append' : 'new', ticket_id, url, path, caption: who.caption || '',
+  phone: who.phone, name: who.name, received_at: who.received_at } }];
+""", [IX + 1040, IY])
+link('Supabase — קישור חתום', 'פנייה עם תמונה')
+switch('פנייה קיימת?', 2, "={{ $json.mode === 'append' ? 1 : 0 }}", [IX + 1300, IY])
+link('פנייה עם תמונה', 'פנייה קיימת?')
+code('שורת פנייה מתמונה', r"""
+const r = $input.first().json;
+return [{ json: { ticket_id: r.ticket_id, created_at: r.received_at, phone: r.phone, customer_name: r.name,
+  message: r.caption || (r.url ? '(תמונה)' : '(תמונה — השמירה נכשלה)'), images: r.url, image_paths: r.path,
+  status: 'new', rep_notes: '' } }];
+""", [IX + 1560, IY - 120])
+link('פנייה קיימת?', 'שורת פנייה מתמונה', 0)
+sheets_append('tickets — פנייה מתמונה', 'tickets', [IX + 1820, IY - 120])
+link('שורת פנייה מתמונה', 'tickets — פנייה מתמונה')
+code('אישור פנייה מתמונה', WHO + r"""
+const r = $('פנייה עם תמונה').first().json;
+const hi = who.name && who.name !== 'לקוח' ? ', ' + who.name : '';
+const text = r.url
+  ? `קיבלתי את התמונה 📷 תודה${hi}!\nפתחתי פנייה (${r.ticket_id}), ונציג יחזור אלייך כאן בוואטסאפ בהקדם.` +
+    (r.caption ? '' : '\nאפשר לכתוב לי במה מדובר, ולשלוח עוד תמונות — הכול יצורף לפנייה.')
+  : `לא הצלחתי לשמור את התמונה 🙏 פתחתי פנייה (${r.ticket_id}), ונציג יחזור אלייך כאן בהקדם.`;
+return [{ json: { phone: who.phone, kind: 'text', route: 'support', text } }];
+""", [IX + 2080, IY - 120])
+link('tickets — פנייה מתמונה', 'אישור פנייה מתמונה')
+sheets_read('tickets — קריאה', 'tickets', [IX + 1560, IY + 120])
+link('פנייה קיימת?', 'tickets — קריאה', 1)
+code('צירוף לפנייה', r"""
+// מוסיפים את הקישור והנתיב לשורה הקיימת — כל תמונה בשורה משלה בתוך התא
+const r = $('פנייה עם תמונה').first().json;
+const row = $input.all().map(i => i.json).find(t => String(t.ticket_id) === r.ticket_id) || {};
+const add = (old, v) => [String(old || '').trim(), v].filter(Boolean).join('\n');
+const out = { ticket_id: r.ticket_id, images: add(row.images, r.url), image_paths: add(row.image_paths, r.path) };
+if (r.caption) out.message = add(row.message, r.caption);
+return [{ json: out }];
+""", [IX + 1820, IY + 120])
+link('tickets — קריאה', 'צירוף לפנייה')
+sheets_update('tickets — צירוף תמונה', 'tickets', 'ticket_id', [IX + 2080, IY + 120])
+link('צירוף לפנייה', 'tickets — צירוף תמונה')
+code('אישור צירוף', WHO + r"""
+const r = $('פנייה עם תמונה').first().json;
+return [{ json: { phone: who.phone, kind: 'text', route: 'support',
+  text: r.url ? `קיבלתי 📷 צירפתי את התמונה לפנייה ${r.ticket_id}.` : `לא הצלחתי לשמור את התמונה 🙏 נציג יחזור אלייך בפנייה ${r.ticket_id}.` } }];
+""", [IX + 2340, IY + 120])
+link('tickets — צירוף תמונה', 'אישור צירוף')
+
 # fitness
 openai('יועץ כושר',
        js_str('אתה יועץ כושר כללי של אפליקציית wellbeing, בוואטסאפ. ענה בעברית, בחום ובקצרה — עד 5 משפטים. '
@@ -570,6 +669,7 @@ if (r.kind === 'list') {
 return [{ json: { ...r, payload } }];
 """, [S, y + 200])
 for src in ['הודעת פתיחה', 'ברכה ותפריט', 'תשובת מכירות', 'בקשת פירוט', 'אישור פנייה',
+            'אישור פנייה מתמונה', 'אישור צירוף',
             'תשובת כושר', 'סטטוס משלוח', 'קישור הרשמה', 'שאלת הבהרה',
             'פרטי מוצר', 'סיכום הזמנה', 'אישור הזמנה', 'הזמנה נכשלה', 'ביטול הזמנה']:
     link(src, 'בניית הודעת וואטסאפ')

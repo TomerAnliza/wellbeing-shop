@@ -2,7 +2,7 @@
  "name": "wellbeing — בוט חנות בוואטסאפ",
  "nodes": [
   {
-   "id": "ce4d4662-2a7d-40a1-9998-d9391974c0b1",
+   "id": "0d79be5a-384f-4c79-a8a6-992432a128da",
    "name": "Meta — אימות webhook (GET)",
    "type": "n8n-nodes-base.webhook",
    "typeVersion": 2,
@@ -16,10 +16,10 @@
     "responseMode": "responseNode",
     "options": {}
    },
-   "webhookId": "321ef7a5-f496-4df0-9aff-5b9123e99925"
+   "webhookId": "ad79470f-1ea4-40c7-8951-3d010a90b275"
   },
   {
-   "id": "f8078750-5851-4794-ac86-5a923c63d043",
+   "id": "b71aa7eb-54e2-4b99-8688-949daa17cf41",
    "name": "החזרת hub.challenge",
    "type": "n8n-nodes-base.respondToWebhook",
    "typeVersion": 1.4,
@@ -36,7 +36,7 @@
    }
   },
   {
-   "id": "4fccacd8-351d-405a-b87c-900908e70e48",
+   "id": "92a24602-1183-49a4-9d11-3ddd412f0999",
    "name": "וואטסאפ — הודעה נכנסת (POST)",
    "type": "n8n-nodes-base.webhook",
    "typeVersion": 2,
@@ -51,10 +51,10 @@
     "responseData": "noData",
     "options": {}
    },
-   "webhookId": "6cf33fae-fa4b-42f5-afef-6c41481b7241"
+   "webhookId": "07a9a031-4835-4f65-b790-682ae84b7393"
   },
   {
-   "id": "a323812d-439f-4fd8-a472-114e85eab64c",
+   "id": "a62e72d9-83ca-4fad-9a14-ada1b2ada79d",
    "name": "פענוח ההודעה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -63,11 +63,11 @@
     0
    ],
    "parameters": {
-    "jsCode": "\n// Meta שולחת גם עדכוני סטטוס (sent/delivered/read). רק הודעה אמיתית ממשיכה.\n// הודעה אחת לכל הרצה — כך כל ההפניות ל-first() בהמשך נכונות.\nconst out = [];\nfor (const item of $input.all()) {\n  const body = item.json.body ?? item.json;\n  for (const entry of body.entry ?? []) {\n    for (const ch of entry.changes ?? []) {\n      const v = ch.value ?? {};\n      const contact = (v.contacts ?? [])[0] ?? {};\n      for (const m of v.messages ?? []) {\n        let text = '', replyId = '';\n        if (m.type === 'text') text = m.text?.body ?? '';\n        else if (m.type === 'interactive') {\n          const r = m.interactive?.list_reply ?? m.interactive?.button_reply ?? {};\n          replyId = r.id ?? ''; text = r.title ?? '';\n        } else if (m.type === 'button') { text = m.button?.text ?? ''; replyId = m.button?.payload ?? ''; }\n        else text = '[' + m.type + ']';\n        out.push({ json: {\n          phone: String(m.from ?? '').replace(/\\D/g, ''),\n          text: String(text).trim(), replyId, type: m.type, message_id: m.id,\n          profile_name: contact.profile?.name ?? '',\n          received_at: $now.setZone('Asia/Jerusalem').toFormat('yyyy-MM-dd HH:mm:ss')\n        }});\n      }\n    }\n  }\n}\nreturn out.slice(0, 1);\n"
+    "jsCode": "\n// Meta שולחת גם עדכוני סטטוס (sent/delivered/read). רק הודעה אמיתית ממשיכה.\n// הודעה אחת לכל הרצה — כך כל ההפניות ל-first() בהמשך נכונות.\nconst out = [];\nfor (const item of $input.all()) {\n  const body = item.json.body ?? item.json;\n  for (const entry of body.entry ?? []) {\n    for (const ch of entry.changes ?? []) {\n      const v = ch.value ?? {};\n      const contact = (v.contacts ?? [])[0] ?? {};\n      for (const m of v.messages ?? []) {\n        let text = '', replyId = '', mediaId = '', caption = '';\n        if (m.type === 'text') text = m.text?.body ?? '';\n        else if (m.type === 'interactive') {\n          const r = m.interactive?.list_reply ?? m.interactive?.button_reply ?? {};\n          replyId = r.id ?? ''; text = r.title ?? '';\n        } else if (m.type === 'button') { text = m.button?.text ?? ''; replyId = m.button?.payload ?? ''; }\n        else if (m.type === 'image') { text = m.image?.caption || '(תמונה)'; mediaId = m.image?.id ?? ''; caption = m.image?.caption ?? ''; }\n        else text = '[' + m.type + ']';\n        out.push({ json: {\n          phone: String(m.from ?? '').replace(/\\D/g, ''),\n          text: String(text).trim(), replyId, type: m.type, message_id: m.id, media_id: mediaId, caption,\n          profile_name: contact.profile?.name ?? '',\n          received_at: $now.setZone('Asia/Jerusalem').toFormat('yyyy-MM-dd HH:mm:ss')\n        }});\n      }\n    }\n  }\n}\nreturn out.slice(0, 1);\n"
    }
   },
   {
-   "id": "8ed76d44-c396-4103-b07f-b1d2999fdcf9",
+   "id": "6b168af8-ed0f-48f3-a0da-0a8e5e09764c",
    "name": "customers — קריאה",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -99,7 +99,7 @@
    "executeOnce": true
   },
   {
-   "id": "51c57c76-5b58-4133-a447-f46efad0703a",
+   "id": "0f6c7909-bcb0-4cc4-b50f-e9ea2f3ccd82",
    "name": "זיהוי לקוח",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -112,7 +112,7 @@
    }
   },
   {
-   "id": "3eef7100-519e-4a0d-9a25-ff57c91f34e8",
+   "id": "ff38ec62-62ba-4768-b3e0-30076c0f44ef",
    "name": "השלמת שם פרופיל?",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -125,7 +125,7 @@
    }
   },
   {
-   "id": "129fc7b2-4a86-43f2-b4d0-8ea5963730f1",
+   "id": "f0a0cccb-7d5e-43c3-91f2-595764e32a64",
    "name": "customers — השלמת שם פרופיל",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -166,7 +166,7 @@
    }
   },
   {
-   "id": "958aef8f-be18-4aee-9e0a-0301fc42aa48",
+   "id": "db5b49dd-3c0b-4177-80d3-7b572dd7e138",
    "name": "שלב הלקוח",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -182,7 +182,7 @@
    }
   },
   {
-   "id": "0a485746-9b9e-4706-8ff8-3f599cf37175",
+   "id": "823b311d-4861-4cdd-84a6-9c6074464a5b",
    "name": "שורת לקוח חדש",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -195,7 +195,7 @@
    }
   },
   {
-   "id": "8e8d4bde-204d-4e63-bfcf-baeafa31c106",
+   "id": "93e59bfa-af67-438b-9c85-356d24d75a77",
    "name": "customers — לקוח חדש",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -234,7 +234,7 @@
    }
   },
   {
-   "id": "91bf7a0a-f628-4338-8cf6-ceda215404d9",
+   "id": "b5c0e9dd-efcc-4537-a2a4-2f50234e8e18",
    "name": "הודעת פתיחה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -247,7 +247,7 @@
    }
   },
   {
-   "id": "56774d7f-3cec-4589-bf7e-9aca3670363b",
+   "id": "2bdd27af-eb87-45bf-9b7e-efb6a4594a53",
    "name": "חילוץ שם",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -276,7 +276,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "6ffc67f5-0339-44ab-8079-262f8e9326ae",
+   "id": "a55a0737-6ea8-4934-9f72-83221eff31ba",
    "name": "בדיקת שם",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -289,7 +289,7 @@
    }
   },
   {
-   "id": "d35fffab-8fb1-478c-b2d3-97cce753c0f3",
+   "id": "30ba45ff-6843-4238-966b-cb9054e487be",
    "name": "שדות לעדכון",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -302,7 +302,7 @@
    }
   },
   {
-   "id": "b5f817d5-2bbe-42f9-9ff6-0d4570e01f4d",
+   "id": "218db8d6-00a3-4bde-a108-59e1ba239e4d",
    "name": "customers — עדכון שם",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -343,7 +343,7 @@
    }
   },
   {
-   "id": "150848de-440a-4bf5-bc62-c3bdac15cabd",
+   "id": "b1cf851b-116b-429e-a892-b06c7a85498f",
    "name": "ברכה ותפריט",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -356,7 +356,7 @@
    }
   },
   {
-   "id": "12647292-d7c2-4727-bee5-69add71f2c7e",
+   "id": "d0b1c4c7-df58-4f68-91e7-e770796d88b1",
    "name": "products — קטלוג",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -388,7 +388,7 @@
    "executeOnce": true
   },
   {
-   "id": "6c6062f8-25ff-4487-bd04-db823c2e42e9",
+   "id": "01005df3-abc6-49f2-b3c7-672b5373c994",
    "name": "הקשר ובחירה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -397,11 +397,11 @@
     260
    ],
    "parameters": {
-    "jsCode": "const who = $('זיהוי לקוח').first().json;\n\nfunction ctxStore() {\n  const s = $getWorkflowStaticData('global');\n  s.ctx = s.ctx || {};\n  return s.ctx;\n}\n\n// הקטלוג (רק מוצרים פעילים) וההקשר מוצמדים לכל הודעה של לקוח מוכר\nconst catalog = $input.all().map(i => i.json)\n  .filter(p => p.id && String(p.active).trim() === 'כן')\n  .map(p => ({ id: String(p.id), name: String(p.name), category: String(p.category),\n               description: String(p.description), price: Number(p.price_ils), stock: Number(p.stock),\n               image: String(p.image || '').trim() }));\nconst ctx = ctxStore()[who.phone] || {};\nconst ctxProduct = ctx.at && Date.now() - ctx.at < 24 * 3600e3 ? ctx.product : null;\n// כפתורים ורשימות מחזירים מזהה עם קידומת — כך יודעים מה נלחץ בלי לשאול את המודל\nconst id = String(who.replyId || '');\nlet action = 'classify', route = null, product = null, qty = 1;\nif (id.startsWith('route_'))        { action = 'route';   route = id.slice(6); }\nelse if (id.startsWith('prod_'))    { action = 'product'; product = id.slice(5); }\nelse if (id.startsWith('order_'))   { action = 'order';   product = id.slice(6); }\nelse if (id.startsWith('confirm_')) {\n  // confirm_P-001_q2 → מוצר P-001, כמות 2\n  action = 'confirm'; const m = id.slice(8).match(/^(.+?)(?:_q(\\d+))?$/);\n  product = m[1]; qty = Number(m[2] || 1);\n}\nelse if (id === 'cancel')           { action = 'cancel'; }\nelse {\n  // \"שאל בוואטסאפ\" מהאתר שולח \"שאלה על <מוצר> (P-004)\" — קוד מוצר מוכר = כרטיס המוצר מיד\n  const code = String(who.text || '').match(/\\((P-\\d{3})\\)/);\n  if (code && catalog.some(p => p.id === code[1])) { action = 'product'; product = code[1]; }\n}\n// זיכרון שיחה: 8 ההודעות האחרונות של המספר (נכתבות ב\"רישום שיחה\"), ל-24 שעות\nconst hist = (($getWorkflowStaticData('global').hist || {})[who.phone] || [])\n  .filter(h => Date.now() - h.at < 24 * 3600e3).slice(-8);\nconst history = hist.map(h => (h.role === 'user' ? 'לקוח: ' : 'בוט: ') + h.text.replace(/\\s+/g, ' ').slice(0, 300)).join('\\n');\nreturn [{ json: { ...who, action, route, product, qty, ctxProduct, catalog, history, fromMenu: action === 'route' } }];\n"
+    "jsCode": "const who = $('זיהוי לקוח').first().json;\n\nfunction ctxStore() {\n  const s = $getWorkflowStaticData('global');\n  s.ctx = s.ctx || {};\n  return s.ctx;\n}\n\n// הקטלוג (רק מוצרים פעילים) וההקשר מוצמדים לכל הודעה של לקוח מוכר\nconst catalog = $input.all().map(i => i.json)\n  .filter(p => p.id && String(p.active).trim() === 'כן')\n  .map(p => ({ id: String(p.id), name: String(p.name), category: String(p.category),\n               description: String(p.description), price: Number(p.price_ils), stock: Number(p.stock),\n               image: String(p.image || '').trim() }));\nconst ctx = ctxStore()[who.phone] || {};\nconst ctxProduct = ctx.at && Date.now() - ctx.at < 24 * 3600e3 ? ctx.product : null;\n// כפתורים ורשימות מחזירים מזהה עם קידומת — כך יודעים מה נלחץ בלי לשאול את המודל\nconst id = String(who.replyId || '');\nlet action = 'classify', route = null, product = null, qty = 1;\nif (id.startsWith('route_'))        { action = 'route';   route = id.slice(6); }\nelse if (id.startsWith('prod_'))    { action = 'product'; product = id.slice(5); }\nelse if (id.startsWith('order_'))   { action = 'order';   product = id.slice(6); }\nelse if (id.startsWith('confirm_')) {\n  // confirm_P-001_q2 → מוצר P-001, כמות 2\n  action = 'confirm'; const m = id.slice(8).match(/^(.+?)(?:_q(\\d+))?$/);\n  product = m[1]; qty = Number(m[2] || 1);\n}\nelse if (id === 'cancel')           { action = 'cancel'; }\n// תמונה מלקוח מוכר = פנייה לשירות (מוצר פגום, חבילה). נשמרת בדלי פרטי ב-Supabase\nelse if (who.type === 'image' && who.media_id) { action = 'image'; }\nelse {\n  // \"שאל בוואטסאפ\" מהאתר שולח \"שאלה על <מוצר> (P-004)\" — קוד מוצר מוכר = כרטיס המוצר מיד\n  const code = String(who.text || '').match(/\\((P-\\d{3})\\)/);\n  if (code && catalog.some(p => p.id === code[1])) { action = 'product'; product = code[1]; }\n}\n// זיכרון שיחה: 8 ההודעות האחרונות של המספר (נכתבות ב\"רישום שיחה\"), ל-24 שעות\nconst hist = (($getWorkflowStaticData('global').hist || {})[who.phone] || [])\n  .filter(h => Date.now() - h.at < 24 * 3600e3).slice(-8);\nconst history = hist.map(h => (h.role === 'user' ? 'לקוח: ' : 'בוט: ') + h.text.replace(/\\s+/g, ' ').slice(0, 300)).join('\\n');\nreturn [{ json: { ...who, action, route, product, qty, ctxProduct, catalog, history, fromMenu: action === 'route' } }];\n"
    }
   },
   {
-   "id": "9a91662c-2772-4643-ad56-93331f964ef2",
+   "id": "415b00e5-6f37-48b3-a52b-d9ada7b9596c",
    "name": "פעולה",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -411,13 +411,13 @@
    ],
    "parameters": {
     "mode": "expression",
-    "numberOutputs": 6,
-    "output": "={{ ['route', 'product', 'order', 'confirm', 'cancel', 'classify'].indexOf($json.action) }}",
+    "numberOutputs": 7,
+    "output": "={{ ['route', 'product', 'order', 'confirm', 'cancel', 'classify', 'image'].indexOf($json.action) }}",
     "options": {}
    }
   },
   {
-   "id": "7479d1a8-4f2d-493e-a4c0-29415670ca10",
+   "id": "25ad3fc9-4efa-4518-aaaa-12e7ca91a9ac",
    "name": "פקיד קבלה — סיווג",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -446,7 +446,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "204df641-11a3-4752-9fd2-4156b19a039e",
+   "id": "62eccfcf-5baa-423c-bad6-f36f8dc5325d",
    "name": "מסלול מהסיווג",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -459,7 +459,7 @@
    }
   },
   {
-   "id": "e69dd950-6bc9-44fa-99bf-3f0e6cd7f02f",
+   "id": "77916e87-a01a-4da7-96b5-87a95c0f929c",
    "name": "ניתוב",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -475,7 +475,7 @@
    }
   },
   {
-   "id": "aa620b69-baf4-4836-acb6-461f855344e9",
+   "id": "2c7e4e75-183d-41ee-8059-21e0b76b2492",
    "name": "סוכן מכירות",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -504,7 +504,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "5f2aca8f-842a-48d6-847c-fe021ae9ab97",
+   "id": "a57a54e0-d720-487d-8feb-bf8a162d0c2f",
    "name": "תשובת מכירות",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -517,7 +517,7 @@
    }
   },
   {
-   "id": "d3f230ab-0aa8-4c83-a863-73d66a84039f",
+   "id": "d854d4e2-8dc2-469f-96fc-688cc6acd325",
    "name": "פרטי מוצר",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -530,7 +530,7 @@
    }
   },
   {
-   "id": "b9d33a3c-3877-4d59-a56d-f9ab55ef407c",
+   "id": "8accef11-d48b-4bb1-965c-507ed1ed95ca",
    "name": "סיכום הזמנה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -543,7 +543,7 @@
    }
   },
   {
-   "id": "5e22dee9-b8a1-46c4-bdc8-0fdcf70b6d3c",
+   "id": "f0a794a6-b022-48d0-84bb-e85bc94df6bf",
    "name": "שורת הזמנה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -556,7 +556,7 @@
    }
   },
   {
-   "id": "d5a5bbbc-449e-4f12-a74f-ee79bbb5e8ae",
+   "id": "23495036-f5e4-422c-bf39-001c0bd06cfa",
    "name": "הזמנה תקינה?",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -572,7 +572,7 @@
    }
   },
   {
-   "id": "2ffc2904-61fe-473c-9745-18560afe116e",
+   "id": "182e7e98-8411-45eb-9789-b77a850859a8",
    "name": "שדות הזמנה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -585,7 +585,7 @@
    }
   },
   {
-   "id": "e6fc90f6-8c20-4fd7-bf54-40f33f553215",
+   "id": "d718919c-abcf-44cb-883f-e6edf9410f5d",
    "name": "orders — הזמנה חדשה",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -623,7 +623,7 @@
    }
   },
   {
-   "id": "6fab12f1-5cc7-4020-b59d-aeaaba347e56",
+   "id": "34bb70a7-ab5a-44fe-84a3-96ef61394fdc",
    "name": "מלאי חדש",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -636,7 +636,7 @@
    }
   },
   {
-   "id": "d06a18e8-224d-4827-bab7-f473df09fa91",
+   "id": "c21d3549-ae44-4b48-b2a1-5225def6c9ae",
    "name": "products — עדכון מלאי",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -677,7 +677,7 @@
    }
   },
   {
-   "id": "dcd8caa1-14ad-4b1d-8348-32ce964c3abb",
+   "id": "a42f98aa-f056-4390-82d0-87bcb3e3e177",
    "name": "אישור הזמנה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -690,7 +690,7 @@
    }
   },
   {
-   "id": "39c93657-3750-4c22-a96e-c99c6be30973",
+   "id": "f3ffe009-9a18-48e4-9ed4-7d5885d11453",
    "name": "הזמנה נכשלה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -703,7 +703,7 @@
    }
   },
   {
-   "id": "d0f76574-8cfe-4ac8-afac-fa395871621a",
+   "id": "fb23dab7-174a-4fc5-b75b-3cbdc58decfe",
    "name": "ביטול הזמנה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -716,7 +716,7 @@
    }
   },
   {
-   "id": "58e9313e-0360-4137-9a57-669a52a8a68f",
+   "id": "78aab7f7-0275-4d26-a7ee-ff56b023e3da",
    "name": "יש פירוט לפנייה?",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -732,7 +732,7 @@
    }
   },
   {
-   "id": "ac6d3d4e-2697-478a-b66c-a8f604fcc0c8",
+   "id": "79290dff-646b-4d30-9248-3ed8418eb14c",
    "name": "בקשת פירוט",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -745,7 +745,7 @@
    }
   },
   {
-   "id": "c69aba3b-2955-45ba-9cc2-79a505630d2a",
+   "id": "409a6c4c-e013-4854-a5c7-1af977bb1101",
    "name": "שורת פנייה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -758,7 +758,7 @@
    }
   },
   {
-   "id": "f1a91ae3-3de2-40ff-9147-139727350948",
+   "id": "66e4785c-316e-493c-9807-5317bcad0870",
    "name": "tickets — פנייה חדשה",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -796,7 +796,7 @@
    }
   },
   {
-   "id": "d292de42-f14b-4ea1-9620-21947cf956f1",
+   "id": "8edcc9d6-16b2-41e3-b626-f2e6c010dc3c",
    "name": "אישור פנייה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -809,7 +809,328 @@
    }
   },
   {
-   "id": "e2b8442b-3af3-4607-8b85-b1802a7980a9",
+   "id": "aa262de0-d656-4308-b729-0e3a42037d22",
+   "name": "מדיה — כתובת",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    5200,
+    1900
+   ],
+   "parameters": {
+    "method": "GET",
+    "url": "=https://graph.facebook.com/v23.0/{{ $json.media_id }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "options": {
+     "timeout": 20000
+    }
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "Cm2UtQogNOYbj6nJ",
+     "name": "WhatsApp Cloud API — wellbeing shop bot"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "4ef143e4-803e-440c-841c-ead653b5161f",
+   "name": "מדיה — הורדה",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    5460,
+    1900
+   ],
+   "parameters": {
+    "method": "GET",
+    "url": "={{ $json.url }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "options": {
+     "timeout": 30000,
+     "response": {
+      "response": {
+       "responseFormat": "file",
+       "outputPropertyName": "data"
+      }
+     }
+    }
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "Cm2UtQogNOYbj6nJ",
+     "name": "WhatsApp Cloud API — wellbeing shop bot"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "e69a2e5c-4f3a-44b7-bce2-4db9fd9112b0",
+   "name": "Supabase — העלאה",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    5720,
+    1900
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "=https://owvvkwxzjuglrfeuujez.supabase.co/storage/v1/object/support-media/{{ $('זיהוי לקוח').first().json.phone }}/{{ $('זיהוי לקוח').first().json.message_id.replace(/[^A-Za-z0-9]/g, '') }}.{{ ($binary.data?.mimeType || 'image/jpeg').split('/')[1].replace('jpeg', 'jpg') }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "={{ $binary.data?.mimeType || 'image/jpeg' }}"
+      },
+      {
+       "name": "x-upsert",
+       "value": "true"
+      }
+     ]
+    },
+    "sendBody": true,
+    "contentType": "binaryData",
+    "inputDataFieldName": "data",
+    "options": {
+     "timeout": 30000
+    }
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "noHlNTCS0ZympGAi",
+     "name": "Supabase — wellbeing storage (secret)"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "84ea2f54-b441-4b4f-9bc4-984e4d7e4d96",
+   "name": "Supabase — קישור חתום",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    5980,
+    1900
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "=https://owvvkwxzjuglrfeuujez.supabase.co/storage/v1/object/sign/{{ $json.Key }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "{ \"expiresIn\": 2592000 }",
+    "options": {
+     "timeout": 20000
+    }
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "noHlNTCS0ZympGAi",
+     "name": "Supabase — wellbeing storage (secret)"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "ac5f0531-b784-4e50-b6af-f9a67021759c",
+   "name": "פנייה עם תמונה",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    6240,
+    1900
+   ],
+   "parameters": {
+    "jsCode": "const who = $('זיהוי לקוח').first().json;\n\n// תמונה תוך 30 דקות מפתיחת פנייה מצטרפת אליה; אחרת נפתחת פנייה חדשה.\n// אם ההורדה או ההעלאה נכשלו — הפנייה נפתחת בכל זאת, עם הערה, והנציג יבקש שוב\nconst up = $('Supabase — העלאה').first().json;\nconst sig = $input.first().json;\nconst path = up.Key ? String(up.Key).replace(/^support-media\\//, '') : '';\nconst url = sig.signedURL ? 'https://owvvkwxzjuglrfeuujez.supabase.co/storage/v1' + sig.signedURL : '';\nconst s = $getWorkflowStaticData('global');\ns.tickets = s.tickets || {};\nconst open = s.tickets[who.phone];\nconst append = !!(open && Date.now() - open.at < 30 * 60e3);\nconst ticket_id = append ? open.id : 'S-' + Date.now();\ns.tickets[who.phone] = { id: ticket_id, at: Date.now() };\nreturn [{ json: { mode: append ? 'append' : 'new', ticket_id, url, path, caption: who.caption || '',\n  phone: who.phone, name: who.name, received_at: who.received_at } }];\n"
+   }
+  },
+  {
+   "id": "82a73a62-a084-4a8c-90bc-48b1f97a297d",
+   "name": "פנייה קיימת?",
+   "type": "n8n-nodes-base.switch",
+   "typeVersion": 3.2,
+   "position": [
+    6500,
+    1900
+   ],
+   "parameters": {
+    "mode": "expression",
+    "numberOutputs": 2,
+    "output": "={{ $json.mode === 'append' ? 1 : 0 }}",
+    "options": {}
+   }
+  },
+  {
+   "id": "cfe3508c-d2d9-498d-bcb6-58bad011dd7d",
+   "name": "שורת פנייה מתמונה",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    6760,
+    1780
+   ],
+   "parameters": {
+    "jsCode": "\nconst r = $input.first().json;\nreturn [{ json: { ticket_id: r.ticket_id, created_at: r.received_at, phone: r.phone, customer_name: r.name,\n  message: r.caption || (r.url ? '(תמונה)' : '(תמונה — השמירה נכשלה)'), images: r.url, image_paths: r.path,\n  status: 'new', rep_notes: '' } }];\n"
+   }
+  },
+  {
+   "id": "ce6d1fff-2217-4789-9e9d-120f7a7b8080",
+   "name": "tickets — פנייה מתמונה",
+   "type": "n8n-nodes-base.googleSheets",
+   "typeVersion": 4.7,
+   "position": [
+    7020,
+    1780
+   ],
+   "parameters": {
+    "operation": "append",
+    "documentId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "11HaiHwuVyGoqmf7zss8d5iwnn2B8CG0hvIfkuGqej2Q"
+    },
+    "sheetName": {
+     "__rl": true,
+     "mode": "name",
+     "value": "tickets"
+    },
+    "columns": {
+     "mappingMode": "autoMapInputData",
+     "value": {},
+     "matchingColumns": [],
+     "schema": []
+    },
+    "options": {
+     "cellFormat": "RAW"
+    }
+   },
+   "credentials": {
+    "googleSheetsOAuth2Api": {
+     "id": "Bsc5ulPj2pt9pUPV",
+     "name": "tomer_analiza_google_sheets"
+    }
+   }
+  },
+  {
+   "id": "36dd8b60-03ff-4ffe-b4fe-3ad83403fdbc",
+   "name": "אישור פנייה מתמונה",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    7280,
+    1780
+   ],
+   "parameters": {
+    "jsCode": "const who = $('זיהוי לקוח').first().json;\n\nconst r = $('פנייה עם תמונה').first().json;\nconst hi = who.name && who.name !== 'לקוח' ? ', ' + who.name : '';\nconst text = r.url\n  ? `קיבלתי את התמונה 📷 תודה${hi}!\\nפתחתי פנייה (${r.ticket_id}), ונציג יחזור אלייך כאן בוואטסאפ בהקדם.` +\n    (r.caption ? '' : '\\nאפשר לכתוב לי במה מדובר, ולשלוח עוד תמונות — הכול יצורף לפנייה.')\n  : `לא הצלחתי לשמור את התמונה 🙏 פתחתי פנייה (${r.ticket_id}), ונציג יחזור אלייך כאן בהקדם.`;\nreturn [{ json: { phone: who.phone, kind: 'text', route: 'support', text } }];\n"
+   }
+  },
+  {
+   "id": "53ddeddf-edc7-472d-b1ed-1c0a04cdd2b4",
+   "name": "tickets — קריאה",
+   "type": "n8n-nodes-base.googleSheets",
+   "typeVersion": 4.7,
+   "position": [
+    6760,
+    2020
+   ],
+   "parameters": {
+    "operation": "read",
+    "documentId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "11HaiHwuVyGoqmf7zss8d5iwnn2B8CG0hvIfkuGqej2Q"
+    },
+    "sheetName": {
+     "__rl": true,
+     "mode": "name",
+     "value": "tickets"
+    },
+    "options": {}
+   },
+   "credentials": {
+    "googleSheetsOAuth2Api": {
+     "id": "Bsc5ulPj2pt9pUPV",
+     "name": "tomer_analiza_google_sheets"
+    }
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "feccd32e-0cc5-44c4-a2de-cc0a0bd76d3d",
+   "name": "צירוף לפנייה",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    7020,
+    2020
+   ],
+   "parameters": {
+    "jsCode": "\n// מוסיפים את הקישור והנתיב לשורה הקיימת — כל תמונה בשורה משלה בתוך התא\nconst r = $('פנייה עם תמונה').first().json;\nconst row = $input.all().map(i => i.json).find(t => String(t.ticket_id) === r.ticket_id) || {};\nconst add = (old, v) => [String(old || '').trim(), v].filter(Boolean).join('\\n');\nconst out = { ticket_id: r.ticket_id, images: add(row.images, r.url), image_paths: add(row.image_paths, r.path) };\nif (r.caption) out.message = add(row.message, r.caption);\nreturn [{ json: out }];\n"
+   }
+  },
+  {
+   "id": "f43208f0-bfdc-4ba2-96b8-92295a85f581",
+   "name": "tickets — צירוף תמונה",
+   "type": "n8n-nodes-base.googleSheets",
+   "typeVersion": 4.7,
+   "position": [
+    7280,
+    2020
+   ],
+   "parameters": {
+    "operation": "update",
+    "documentId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "11HaiHwuVyGoqmf7zss8d5iwnn2B8CG0hvIfkuGqej2Q"
+    },
+    "sheetName": {
+     "__rl": true,
+     "mode": "name",
+     "value": "tickets"
+    },
+    "columns": {
+     "mappingMode": "autoMapInputData",
+     "value": {},
+     "matchingColumns": [
+      "ticket_id"
+     ],
+     "schema": []
+    },
+    "options": {
+     "cellFormat": "RAW",
+     "handlingExtraData": "insertInNewColumn"
+    }
+   },
+   "credentials": {
+    "googleSheetsOAuth2Api": {
+     "id": "Bsc5ulPj2pt9pUPV",
+     "name": "tomer_analiza_google_sheets"
+    }
+   }
+  },
+  {
+   "id": "5bec9080-79a0-48d4-90b9-f2b06849e548",
+   "name": "אישור צירוף",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    7540,
+    2020
+   ],
+   "parameters": {
+    "jsCode": "const who = $('זיהוי לקוח').first().json;\n\nconst r = $('פנייה עם תמונה').first().json;\nreturn [{ json: { phone: who.phone, kind: 'text', route: 'support',\n  text: r.url ? `קיבלתי 📷 צירפתי את התמונה לפנייה ${r.ticket_id}.` : `לא הצלחתי לשמור את התמונה 🙏 נציג יחזור אלייך בפנייה ${r.ticket_id}.` } }];\n"
+   }
+  },
+  {
+   "id": "5c0adf02-3a9e-4683-9654-10ba6ff3a5a0",
    "name": "יועץ כושר",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -838,7 +1159,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "ebe73ed6-966e-4f98-9d1b-d217c45cd8cc",
+   "id": "4f52f172-26c8-4b69-84a5-c837e44ca4e8",
    "name": "תשובת כושר",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -851,7 +1172,7 @@
    }
   },
   {
-   "id": "0e4c0c24-16ab-4664-b9dd-096ea1004b09",
+   "id": "de945aef-4a41-430d-8765-39decc3e66d4",
    "name": "orders — קריאה",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -883,7 +1204,7 @@
    "executeOnce": true
   },
   {
-   "id": "83b07533-1f11-410d-bb2f-c28489e465f1",
+   "id": "ff3538b0-1d4b-4401-80eb-08b9c80c397b",
    "name": "סטטוס משלוח",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -896,7 +1217,7 @@
    }
   },
   {
-   "id": "d801e0fe-4b1a-47c5-9d5c-da94e5b77a31",
+   "id": "a57d5e71-2bbd-4d0c-a61a-7a18bb9d1702",
    "name": "קישור הרשמה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -909,7 +1230,7 @@
    }
   },
   {
-   "id": "69994180-c151-49b1-89ec-cbe3b76ab3ec",
+   "id": "e37de381-652d-47c7-9898-23efcb14353b",
    "name": "שאלת הבהרה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -922,7 +1243,7 @@
    }
   },
   {
-   "id": "fef98fd2-6d8b-42c2-90b1-378402e560a0",
+   "id": "69afc7b9-39e7-4d19-8787-e1177063970f",
    "name": "בניית הודעת וואטסאפ",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -935,7 +1256,7 @@
    }
   },
   {
-   "id": "2d666586-85d8-4acc-b648-76b0868a8fc8",
+   "id": "be785fda-cb09-4d44-ab1e-cef60a35d3eb",
    "name": "שליחה בוואטסאפ",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -964,7 +1285,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "9fb4189d-1579-42b2-82f7-b6f9ca049a0e",
+   "id": "5053d09a-7055-4eea-ad7d-2186887b8e55",
    "name": "רישום שיחה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -977,7 +1298,7 @@
    }
   },
   {
-   "id": "e61a9b8a-2a77-4e4a-8480-2a2f4572c403",
+   "id": "a07cae18-e3fd-44e2-b17a-0b7abf5be13e",
    "name": "chat_log — רישום",
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
@@ -1015,7 +1336,7 @@
    }
   },
   {
-   "id": "9707c242-bd8f-4252-88bf-a7a60d666591",
+   "id": "44e7ba1a-4735-44f3-ba13-7b2d909e3707",
    "name": "הסבר",
    "type": "n8n-nodes-base.stickyNote",
    "typeVersion": 1,
@@ -1258,6 +1579,13 @@
       "type": "main",
       "index": 0
      }
+    ],
+    [
+     {
+      "node": "מדיה — כתובת",
+      "type": "main",
+      "index": 0
+     }
     ]
    ]
   },
@@ -1460,6 +1788,134 @@
     ]
    ]
   },
+  "מדיה — כתובת": {
+   "main": [
+    [
+     {
+      "node": "מדיה — הורדה",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "מדיה — הורדה": {
+   "main": [
+    [
+     {
+      "node": "Supabase — העלאה",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Supabase — העלאה": {
+   "main": [
+    [
+     {
+      "node": "Supabase — קישור חתום",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Supabase — קישור חתום": {
+   "main": [
+    [
+     {
+      "node": "פנייה עם תמונה",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "פנייה עם תמונה": {
+   "main": [
+    [
+     {
+      "node": "פנייה קיימת?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "פנייה קיימת?": {
+   "main": [
+    [
+     {
+      "node": "שורת פנייה מתמונה",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "tickets — קריאה",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "שורת פנייה מתמונה": {
+   "main": [
+    [
+     {
+      "node": "tickets — פנייה מתמונה",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "tickets — פנייה מתמונה": {
+   "main": [
+    [
+     {
+      "node": "אישור פנייה מתמונה",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "tickets — קריאה": {
+   "main": [
+    [
+     {
+      "node": "צירוף לפנייה",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "צירוף לפנייה": {
+   "main": [
+    [
+     {
+      "node": "tickets — צירוף תמונה",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "tickets — צירוף תמונה": {
+   "main": [
+    [
+     {
+      "node": "אישור צירוף",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
   "יועץ כושר": {
    "main": [
     [
@@ -1527,6 +1983,28 @@
    ]
   },
   "אישור פנייה": {
+   "main": [
+    [
+     {
+      "node": "בניית הודעת וואטסאפ",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "אישור פנייה מתמונה": {
+   "main": [
+    [
+     {
+      "node": "בניית הודעת וואטסאפ",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "אישור צירוף": {
    "main": [
     [
      {
