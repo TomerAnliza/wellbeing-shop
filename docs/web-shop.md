@@ -87,15 +87,14 @@ npm run dev
 - **משתנה סביבה:** `PRODUCTS_URL` מוגדר ל-Production
 - **`web/vercel.json`** קובע `framework: nextjs`. בלעדיו פרויקט שנוצר מה-CLI נבנה
   כאתר סטטי ונכשל ב-"Output Directory public is empty"
-- **פריסה ידנית**, מתוך `web/`:
+- **פריסה אוטומטית:** כל push ל-`main` ב-`TomerAnliza/wellbeing-shop` נפרס לפרודקשן.
+  תומר חיבר את הריפו ב-23 בספטמבר 2026, אחרי שהחיבור מה-CLI נכשל כי לאפליקציית Vercel ב-GitHub
+  לא הייתה גישה לריפו. **Root Directory = `web`** (הוגדר דרך ה-API של Vercel)
+- **פריסה ידנית**, רק כשצריך לעקוף את הגיט. מתוך **שורש הריפו**, לא מתוך `web/`,
+  כי Root Directory כבר מצביע על `web`:
 
   ```bash
   vercel deploy --prod --scope tmx-aa90
   ```
-
-- **פריסה אוטומטית בכל push — עוד לא מחוברת.** החיבור ל-GitHub מה-CLI נכשל, כי
-  אפליקציית Vercel ב-GitHub עוד לא קיבלה גישה לריפו החדש. לחיבור:
-  Vercel → wellbeing-shop → Settings → Git → Connect → `TomerAnliza/wellbeing-shop`,
-  ובהגדרות Build: **Root Directory = `web`**
 
 נבדק ב-23 בספטמבר 2026: 10 מוצרים עם תמונות מ-Supabase, דרך `next/image` של Vercel.
