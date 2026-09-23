@@ -1,7 +1,7 @@
 // ── פענוח ההודעה ─────────────────────────────────────────────
 // מקבל את ה-webhook של Meta ומחלץ ממנו הודעה אחת בפורמט אחיד.
 // Meta שולחת גם עדכוני סטטוס (sent / delivered / read) — הם מסוננים כאן.
-// פלט: { phone, text, replyId, type, message_id, media_id, caption, profile_name, received_at }
+// פלט: { phone, text, replyId, type, message_id, media_id, caption, verifyCode, profile_name, received_at }
 
 const messages = [];
 
@@ -57,6 +57,9 @@ function readMessage(message, contact) {
       text = `[${message.type}]`;
   }
 
+  // "קוד אימות: 482913" — נשלח מדף אימות הטלפון באתר
+  const verifyCode = /קוד\s*אימות\D*(\d{6})/.exec(text)?.[1] ?? '';
+
   return {
     phone: String(message.from ?? '').replace(/\D/g, ''),
     text: String(text).trim(),
@@ -65,6 +68,7 @@ function readMessage(message, contact) {
     message_id: message.id,
     media_id: mediaId,
     caption,
+    verifyCode,
     profile_name: contact.profile?.name ?? '',
     received_at: $now.setZone('Asia/Jerusalem').toFormat('yyyy-MM-dd HH:mm:ss'),
   };

@@ -45,7 +45,7 @@ export function TabBar() {
   );
 }
 
-export function TopNav() {
+export function TopNav({ account }: { account: Account }) {
   const isActive = useActive();
   return (
     <header className="sticky top-0 z-20 hidden border-b border-card-border bg-screen/90 backdrop-blur-md lg:block">
@@ -72,7 +72,32 @@ export function TopNav() {
             );
           })}
         </nav>
+        <div className="ms-auto">
+          <AccountLink account={account} />
+        </div>
       </div>
     </header>
+  );
+}
+
+// המשתמש המחובר (שם לאווטאר), או null — אז מוצג "כניסה"
+export type Account = { name: string } | null;
+
+export function AccountLink({ account }: { account: Account }) {
+  if (!account) {
+    return (
+      <Link href="/login" className="rounded-full bg-brand px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-hover">
+        כניסה
+      </Link>
+    );
+  }
+  return (
+    <Link
+      href="/app/profile"
+      aria-label={`הפרופיל של ${account.name}`}
+      className="flex size-10 items-center justify-center rounded-full bg-brand-soft text-[15px] font-semibold text-brand-soft-ink hover:ring-2 hover:ring-brand/30"
+    >
+      {account.name.trim().charAt(0) || "?"}
+    </Link>
   );
 }

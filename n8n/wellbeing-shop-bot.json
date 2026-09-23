@@ -11,9 +11,9 @@
     -420
    ],
    "parameters": {
-    "content": "## ① קליטה וזיהוי\nMeta מאמתת את ה-webhook ב-GET, ושולחת הודעות ב-POST.\nכל הודעה: פענוח → חיפוש הטלפון ב-customers → שלב הלקוח.",
-    "width": 1460,
-    "height": 860,
+    "content": "## ① קליטה וזיהוי\nMeta מאמתת את ה-webhook ב-GET, ושולחת הודעות ב-POST.\nכל הודעה: בדיקת החתימה של Meta → פענוח → חיפוש הטלפון ב-customers →\nקוד אימות מהאתר? → שלב הלקוח.",
+    "width": 2060,
+    "height": 840,
     "color": 7
    }
   },
@@ -65,13 +65,15 @@
     "path": "wellbeing-shop-bot",
     "responseMode": "onReceived",
     "responseData": "noData",
-    "options": {}
+    "options": {
+     "rawBody": true
+    }
    },
    "webhookId": "b0b7e65f-cbde-58aa-909c-f8b7a48a1bf0"
   },
   {
-   "id": "d199b916-53d9-5d5e-97ed-be96db6bc728",
-   "name": "פענוח ההודעה",
+   "id": "341d3a52-65ea-5576-afc7-add1abcce3ff",
+   "name": "בדיקת חתימה",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
@@ -79,7 +81,20 @@
     0
    ],
    "parameters": {
-    "jsCode": "// ── פענוח ההודעה ─────────────────────────────────────────────\n// מקבל את ה-webhook של Meta ומחלץ ממנו הודעה אחת בפורמט אחיד.\n// Meta שולחת גם עדכוני סטטוס (sent / delivered / read) — הם מסוננים כאן.\n// פלט: { phone, text, replyId, type, message_id, media_id, caption, profile_name, received_at }\n\nconst messages = [];\n\nfor (const item of $input.all()) {\n  const body = item.json.body ?? item.json;\n\n  for (const entry of body.entry ?? []) {\n    for (const change of entry.changes ?? []) {\n      const value = change.value ?? {};\n      const contact = (value.contacts ?? [])[0] ?? {};\n\n      for (const message of value.messages ?? []) {\n        messages.push({ json: readMessage(message, contact) });\n      }\n    }\n  }\n}\n\n// הודעה אחת לכל הרצה — כך כל ההפניות ל-first() בהמשך התרחיש נכונות\nreturn messages.slice(0, 1);\n\nfunction readMessage(message, contact) {\n  let text = '';\n  let replyId = ''; // מזהה הכפתור או השורה שנלחצו, למשל route_sales\n  let mediaId = '';\n  let caption = '';\n\n  switch (message.type) {\n    case 'text':\n      text = message.text?.body ?? '';\n      break;\n\n    case 'interactive': {\n      // לחיצה על שורה ברשימה או על כפתור תשובה\n      const reply = message.interactive?.list_reply ?? message.interactive?.button_reply ?? {};\n      replyId = reply.id ?? '';\n      text = reply.title ?? '';\n      break;\n    }\n\n    case 'button': // כפתור בתבנית\n      text = message.button?.text ?? '';\n      replyId = message.button?.payload ?? '';\n      break;\n\n    case 'image':\n      caption = message.image?.caption ?? '';\n      text = caption || '(תמונה)';\n      mediaId = message.image?.id ?? '';\n      break;\n\n    default: // קול, מסמך, מיקום... — נרשם, ולא מטופל\n      text = `[${message.type}]`;\n  }\n\n  return {\n    phone: String(message.from ?? '').replace(/\\D/g, ''),\n    text: String(text).trim(),\n    replyId,\n    type: message.type,\n    message_id: message.id,\n    media_id: mediaId,\n    caption,\n    profile_name: contact.profile?.name ?? '',\n    received_at: $now.setZone('Asia/Jerusalem').toFormat('yyyy-MM-dd HH:mm:ss'),\n  };\n}\n"
+    "jsCode": "// ── בדיקת חתימה ──────────────────────────────────────────────\n// Meta חותמת כל webhook ב-HMAC-SHA256 של הגוף הגולמי, עם ה-App Secret של האפליקציה,\n// בכותרת X-Hub-Signature-256. בלי הבדיקה הזו, כל מי שמכיר את הכתובת יכול לשלוח\n// הודעה \"מטלפון של מישהו אחר\" — ולאמת מספר שאינו שלו (docs/spec-auth-and-app.md).\n//\n// הסוד: משתנה הסביבה META_APP_SECRET_WELLBEING של n8n — לא בתרחיש ולא בגיט.\n// הגוף הגולמי: ה-webhook שומר אותו (rawBody) בשדה הבינארי data.\n// חתימה חסרה או שגויה → הבקשה נזרקת בשקט. גם סוד חסר → נזרקת (נכשלים סגור).\n\nconst crypto = require('crypto');\n\nconst request = $input.first();\nconst secret = $env.META_APP_SECRET_WELLBEING;\nconst received = String(request.json.headers?.['x-hub-signature-256'] ?? '');\n\nif (!secret || !received) return [];\n\nconst rawBody = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(rawBody).digest('hex');\n\n// השוואה בזמן קבוע — כדי לא לחשוף דרך זמני תגובה כמה תווים נכונים\nconst valid =\n  received.length === expected.length &&\n  crypto.timingSafeEqual(Buffer.from(received), Buffer.from(expected));\n\nif (!valid) return [];\n\n// ממשיכים בלי הקובץ הבינארי — מכאן והלאה עובדים עם ה-JSON\nreturn [{ json: request.json }];\n"
+   }
+  },
+  {
+   "id": "d199b916-53d9-5d5e-97ed-be96db6bc728",
+   "name": "פענוח ההודעה",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    600,
+    0
+   ],
+   "parameters": {
+    "jsCode": "// ── פענוח ההודעה ─────────────────────────────────────────────\n// מקבל את ה-webhook של Meta ומחלץ ממנו הודעה אחת בפורמט אחיד.\n// Meta שולחת גם עדכוני סטטוס (sent / delivered / read) — הם מסוננים כאן.\n// פלט: { phone, text, replyId, type, message_id, media_id, caption, verifyCode, profile_name, received_at }\n\nconst messages = [];\n\nfor (const item of $input.all()) {\n  const body = item.json.body ?? item.json;\n\n  for (const entry of body.entry ?? []) {\n    for (const change of entry.changes ?? []) {\n      const value = change.value ?? {};\n      const contact = (value.contacts ?? [])[0] ?? {};\n\n      for (const message of value.messages ?? []) {\n        messages.push({ json: readMessage(message, contact) });\n      }\n    }\n  }\n}\n\n// הודעה אחת לכל הרצה — כך כל ההפניות ל-first() בהמשך התרחיש נכונות\nreturn messages.slice(0, 1);\n\nfunction readMessage(message, contact) {\n  let text = '';\n  let replyId = ''; // מזהה הכפתור או השורה שנלחצו, למשל route_sales\n  let mediaId = '';\n  let caption = '';\n\n  switch (message.type) {\n    case 'text':\n      text = message.text?.body ?? '';\n      break;\n\n    case 'interactive': {\n      // לחיצה על שורה ברשימה או על כפתור תשובה\n      const reply = message.interactive?.list_reply ?? message.interactive?.button_reply ?? {};\n      replyId = reply.id ?? '';\n      text = reply.title ?? '';\n      break;\n    }\n\n    case 'button': // כפתור בתבנית\n      text = message.button?.text ?? '';\n      replyId = message.button?.payload ?? '';\n      break;\n\n    case 'image':\n      caption = message.image?.caption ?? '';\n      text = caption || '(תמונה)';\n      mediaId = message.image?.id ?? '';\n      break;\n\n    default: // קול, מסמך, מיקום... — נרשם, ולא מטופל\n      text = `[${message.type}]`;\n  }\n\n  // \"קוד אימות: 482913\" — נשלח מדף אימות הטלפון באתר\n  const verifyCode = /קוד\\s*אימות\\D*(\\d{6})/.exec(text)?.[1] ?? '';\n\n  return {\n    phone: String(message.from ?? '').replace(/\\D/g, ''),\n    text: String(text).trim(),\n    replyId,\n    type: message.type,\n    message_id: message.id,\n    media_id: mediaId,\n    caption,\n    verifyCode,\n    profile_name: contact.profile?.name ?? '',\n    received_at: $now.setZone('Asia/Jerusalem').toFormat('yyyy-MM-dd HH:mm:ss'),\n  };\n}\n"
    }
   },
   {
@@ -88,7 +103,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    600,
+    900,
     0
    ],
    "parameters": {
@@ -120,11 +135,78 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    900,
+    1200,
     0
    ],
    "parameters": {
     "jsCode": "// ── זיהוי לקוח ───────────────────────────────────────────────\n// מחפש את הטלפון בלשונית customers וקובע באיזה שלב הלקוח:\n//   new           — מספר שלא ראינו\n//   awaiting_name — שאלנו לשם ועוד לא קיבלנו תשובה תקינה (שם ריק או \"?\")\n//   known         — לקוח מוכר\n// פלט: ההודעה + { stage, name, user_id, wa_saved }\n\nconst message = $('פענוח ההודעה').first().json;\n\n// השוואה על ספרות בלבד: הגיליון עשוי לשמור את הטלפון כטקסט או כמספר\nconst digits = value => String(value ?? '').replace(/\\D/g, '');\n\nconst customers = $input\n  .all()\n  .map(item => item.json)\n  .filter(row => row?.phone !== undefined);\nconst row = customers.find(customer => digits(customer.phone) === message.phone);\n\nconst name = row ? String(row.name ?? '').trim() : '';\n\nlet stage = 'new';\nif (row) {\n  stage = name === '' || name === '?' ? 'awaiting_name' : 'known';\n}\n\nreturn [\n  {\n    json: {\n      ...message,\n      stage,\n      name,\n      user_id: row ? String(row.user_id ?? '') : '',\n      wa_saved: row ? String(row.whatsapp_name ?? '').trim() : '', // שם הפרופיל שכבר שמור בגיליון\n    },\n  },\n];\n"
+   }
+  },
+  {
+   "id": "04a33ed5-8b67-543d-a9bb-6e8ab11a642f",
+   "name": "קוד אימות?",
+   "type": "n8n-nodes-base.switch",
+   "typeVersion": 3.3,
+   "position": [
+    1500,
+    0
+   ],
+   "parameters": {
+    "rules": {
+     "values": [
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "conditions": [
+         {
+          "id": "ffcb3882-80c1-5cb1-966b-704524e0d41e",
+          "leftValue": "={{ $json.verifyCode }}",
+          "rightValue": "",
+          "operator": {
+           "type": "string",
+           "operation": "notEmpty",
+           "singleValue": true
+          }
+         }
+        ],
+        "combinator": "and"
+       },
+       "renameOutput": true,
+       "outputKey": "קוד אימות מהאתר"
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "conditions": [
+         {
+          "id": "9d5bbbbd-b703-5fb8-a6f5-fbe45c755cf8",
+          "leftValue": "={{ $json.verifyCode }}",
+          "rightValue": "",
+          "operator": {
+           "type": "string",
+           "operation": "empty",
+           "singleValue": true
+          }
+         }
+        ],
+        "combinator": "and"
+       },
+       "renameOutput": true,
+       "outputKey": "הודעה רגילה"
+      }
+     ]
+    },
+    "options": {}
    }
   },
   {
@@ -133,7 +215,7 @@
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.3,
    "position": [
-    1200,
+    1800,
     0
    ],
    "parameters": {
@@ -271,12 +353,230 @@
    }
   },
   {
+   "id": "9d059490-02ad-5e94-b459-d664ec906a08",
+   "name": "אימות טלפון מהאתר",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    1420,
+    460
+   ],
+   "parameters": {
+    "content": "## אימות טלפון מהאתר\n\"קוד אימות: 482913\" נשלח מדף האימות באתר. Supabase בודק שהקוד שייך לטלפון ששלח\n(rpc verify_phone, רק עם המפתח הסודי). אחרי אימות — הלקוח בגיליון מקושר לחשבון.",
+    "width": 1500,
+    "height": 540,
+    "color": 1
+   }
+  },
+  {
+   "id": "0eb1fc02-cfcb-5399-8d78-3e965cd351db",
+   "name": "Supabase — אימות טלפון",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    1500,
+    620
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://owvvkwxzjuglrfeuujez.supabase.co/rest/v1/rpc/verify_phone",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ p_phone: $json.phone, p_code: $json.verifyCode }) }}",
+    "options": {
+     "timeout": 15000
+    }
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "noHlNTCS0ZympGAi",
+     "name": "Supabase — wellbeing storage (secret)"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "b09144a0-cbf7-5111-a8d9-71c90893b5c4",
+   "name": "תוצאת אימות",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    1800,
+    620
+   ],
+   "parameters": {
+    "jsCode": "// ── תוצאת אימות ──────────────────────────────────────────────\n// התשובה של Supabase (rpc verify_phone): { status, name, user_id }.\n//   verified      — הטלפון אומת. דף האימות באתר ממשיך לבד\n//   invalid       — קוד שגוי, שפג, שכבר נוצל, או שנשלח ממספר אחר\n//   taken         — המספר כבר מאומת בחשבון אחר\n//   phone_changed — המשתמש החליף מספר אחרי שביקש את הקוד\n// כשל בקריאה עצמה → הודעת גיבוי.\n\nconst customer = $('זיהוי לקוח').first().json;\nconst result = $input.first().json;\n\nconst REPLIES = {\n  verified: `הטלפון אומת ✅${result.name ? ' ' + result.name + ',' : ''} אפשר לחזור לאתר — הוא כבר ממשיך לבד.`,\n  invalid: 'הקוד לא תקין, או שעבר הזמן שלו. אפשר לקבל קוד חדש באתר, בדף אימות הטלפון.',\n  taken: 'המספר הזה כבר מאומת בחשבון אחר. אם זו טעות — כתבו לי \"נציג\" ונבדוק.',\n  phone_changed: 'המספר בחשבון השתנה מאז שביקשת את הקוד. אפשר לקבל קוד חדש באתר.',\n};\n\nconst text = REPLIES[result.status] ?? 'לא הצלחתי לאמת כרגע 🙏 נסו לשלוח את הקוד שוב בעוד רגע.';\n\nreturn [\n  {\n    json: {\n      phone: customer.phone,\n      route: 'verify',\n      kind: 'text',\n      text,\n      // לענף המקביל שמקשר את הלקוח בגיליון לחשבון באתר\n      verified: result.status === 'verified',\n      user_id: result.user_id ?? '',\n      name: result.name ?? '',\n    },\n  },\n];\n"
+   }
+  },
+  {
+   "id": "4c2e7a06-83fa-59fe-b7e7-ba540c594af3",
+   "name": "קישור לקוח לחשבון",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    1800,
+    840
+   ],
+   "parameters": {
+    "jsCode": "// ── קישור לקוח לחשבון ────────────────────────────────────────\n// אחרי אימות מוצלח, הלקוח בגיליון customers מקבל את ה-user_id שלו מהאתר:\n//   מספר שלא כתב לבוט אף פעם → שורה חדשה, עם השם מהאתר (source = web)\n//   לקוח מוכר → מעדכנים user_id (ואת השם, אם עוד לא נקלט). בלי source\n// הצומת הבא מבחין בין השניים לפי source.\n// ענף מקביל: לא מעכב את התשובה ללקוח.\n\nconst customer = $('זיהוי לקוח').first().json;\nconst result = $input.first().json;\n\nif (!result.verified) return [];\n\nif (customer.stage === 'new') {\n  return [\n    {\n      json: {\n        phone: customer.phone,\n        name: result.name,\n        whatsapp_name: customer.profile_name,\n        created_at: customer.received_at,\n        user_id: result.user_id,\n        source: 'web',\n      },\n    },\n  ];\n}\n\nconst update = { phone: customer.phone, user_id: result.user_id };\nif (customer.stage === 'awaiting_name' && result.name) update.name = result.name;\nreturn [{ json: update }];\n"
+   }
+  },
+  {
+   "id": "3b9fc25c-6a5e-5f6f-9d68-a190499bce51",
+   "name": "לקוח חדש בגיליון?",
+   "type": "n8n-nodes-base.switch",
+   "typeVersion": 3.3,
+   "position": [
+    2100,
+    840
+   ],
+   "parameters": {
+    "rules": {
+     "values": [
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "conditions": [
+         {
+          "id": "378a9605-4aac-5101-ac35-38138c32ef5a",
+          "leftValue": "={{ $json.source }}",
+          "rightValue": "",
+          "operator": {
+           "type": "string",
+           "operation": "exists",
+           "singleValue": true
+          }
+         }
+        ],
+        "combinator": "and"
+       },
+       "renameOutput": true,
+       "outputKey": "לקוח חדש"
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "conditions": [
+         {
+          "id": "fb228fb3-8082-5fab-83ea-41b0ebfdf813",
+          "leftValue": "={{ $json.source }}",
+          "rightValue": "",
+          "operator": {
+           "type": "string",
+           "operation": "notExists",
+           "singleValue": true
+          }
+         }
+        ],
+        "combinator": "and"
+       },
+       "renameOutput": true,
+       "outputKey": "לקוח קיים"
+      }
+     ]
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "bf3b0042-081b-578a-8a68-845055c64864",
+   "name": "customers — לקוח מהאתר",
+   "type": "n8n-nodes-base.googleSheets",
+   "typeVersion": 4.7,
+   "position": [
+    2400,
+    760
+   ],
+   "parameters": {
+    "operation": "append",
+    "documentId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "1TfXLEnReGfAFv2MfCeqfO-cdac81__YpRrsAB7bD8fU"
+    },
+    "sheetName": {
+     "__rl": true,
+     "mode": "name",
+     "value": "customers"
+    },
+    "columns": {
+     "mappingMode": "autoMapInputData",
+     "value": {},
+     "matchingColumns": [],
+     "schema": []
+    },
+    "options": {
+     "cellFormat": "RAW",
+     "handlingExtraData": "insertInNewColumn"
+    }
+   },
+   "credentials": {
+    "googleSheetsOAuth2Api": {
+     "id": "Bsc5ulPj2pt9pUPV",
+     "name": "tomer_analiza_google_sheets"
+    }
+   }
+  },
+  {
+   "id": "6882126a-2e74-5c9d-98fa-8ec0433681f8",
+   "name": "customers — קישור לחשבון",
+   "type": "n8n-nodes-base.googleSheets",
+   "typeVersion": 4.7,
+   "position": [
+    2400,
+    920
+   ],
+   "parameters": {
+    "operation": "update",
+    "documentId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "1TfXLEnReGfAFv2MfCeqfO-cdac81__YpRrsAB7bD8fU"
+    },
+    "sheetName": {
+     "__rl": true,
+     "mode": "name",
+     "value": "customers"
+    },
+    "columns": {
+     "mappingMode": "autoMapInputData",
+     "value": {},
+     "matchingColumns": [
+      "phone"
+     ],
+     "schema": []
+    },
+    "options": {
+     "cellFormat": "RAW",
+     "handlingExtraData": "insertInNewColumn"
+    }
+   },
+   "credentials": {
+    "googleSheetsOAuth2Api": {
+     "id": "Bsc5ulPj2pt9pUPV",
+     "name": "tomer_analiza_google_sheets"
+    }
+   }
+  },
+  {
    "id": "b3ae7585-8772-511a-9253-6d770a2fe0fe",
    "name": "② לקוח חדש — היכרות",
    "type": "n8n-nodes-base.stickyNote",
    "typeVersion": 1,
    "position": [
-    1420,
+    2020,
     -900
    ],
    "parameters": {
@@ -292,7 +592,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    1500,
+    2100,
     -720
    ],
    "parameters": {
@@ -305,7 +605,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    1800,
+    2400,
     -720
    ],
    "parameters": {
@@ -344,7 +644,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    2100,
+    2700,
     -720
    ],
    "parameters": {
@@ -357,7 +657,7 @@
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
    "position": [
-    1500,
+    2100,
     -460
    ],
    "parameters": {
@@ -386,7 +686,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    1800,
+    2400,
     -460
    ],
    "parameters": {
@@ -399,7 +699,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    2100,
+    2700,
     -460
    ],
    "parameters": {
@@ -412,7 +712,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    2400,
+    3000,
     -460
    ],
    "parameters": {
@@ -453,7 +753,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    2700,
+    3300,
     -460
    ],
    "parameters": {
@@ -466,7 +766,7 @@
    "type": "n8n-nodes-base.stickyNote",
    "typeVersion": 1,
    "position": [
-    1420,
+    2020,
     -200
    ],
    "parameters": {
@@ -482,7 +782,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    1500,
+    2100,
     0
    ],
    "parameters": {
@@ -514,7 +814,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    1800,
+    2400,
     0
    ],
    "parameters": {
@@ -527,7 +827,7 @@
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.3,
    "position": [
-    2100,
+    2700,
     0
    ],
    "parameters": {
@@ -712,7 +1012,7 @@
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
    "position": [
-    2400,
+    3000,
     160
    ],
    "parameters": {
@@ -741,7 +1041,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    2700,
+    3300,
     160
    ],
    "parameters": {
@@ -754,7 +1054,7 @@
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.3,
    "position": [
-    3000,
+    3600,
     0
    ],
    "parameters": {
@@ -939,7 +1239,7 @@
    "type": "n8n-nodes-base.stickyNote",
    "typeVersion": 1,
    "position": [
-    3220,
+    3820,
     -800
    ],
    "parameters": {
@@ -955,7 +1255,7 @@
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
    "position": [
-    3300,
+    3900,
     -640
    ],
    "parameters": {
@@ -984,7 +1284,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3600,
+    4200,
     -640
    ],
    "parameters": {
@@ -997,7 +1297,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3300,
+    3900,
     -480
    ],
    "parameters": {
@@ -1010,7 +1310,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3300,
+    3900,
     -320
    ],
    "parameters": {
@@ -1023,7 +1323,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3300,
+    3900,
     -160
    ],
    "parameters": {
@@ -1036,7 +1336,7 @@
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.3,
    "position": [
-    3600,
+    4200,
     -160
    ],
    "parameters": {
@@ -1103,7 +1403,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3900,
+    4500,
     -240
    ],
    "parameters": {
@@ -1116,7 +1416,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    4200,
+    4800,
     -240
    ],
    "parameters": {
@@ -1154,7 +1454,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    4500,
+    5100,
     -240
    ],
    "parameters": {
@@ -1167,7 +1467,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    4800,
+    5400,
     -240
    ],
    "parameters": {
@@ -1208,7 +1508,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    5100,
+    5700,
     -240
    ],
    "parameters": {
@@ -1221,7 +1521,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3900,
+    4500,
     -60
    ],
    "parameters": {
@@ -1234,7 +1534,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3300,
+    3900,
     100
    ],
    "parameters": {
@@ -1247,7 +1547,7 @@
    "type": "n8n-nodes-base.stickyNote",
    "typeVersion": 1,
    "position": [
-    2320,
+    2920,
     340
    ],
    "parameters": {
@@ -1263,7 +1563,7 @@
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.3,
    "position": [
-    3300,
+    3900,
     480
    ],
    "parameters": {
@@ -1330,7 +1630,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3600,
+    4200,
     420
    ],
    "parameters": {
@@ -1343,7 +1643,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3600,
+    4200,
     580
    ],
    "parameters": {
@@ -1356,7 +1656,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    3900,
+    4500,
     580
    ],
    "parameters": {
@@ -1394,7 +1694,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    4200,
+    4800,
     580
    ],
    "parameters": {
@@ -1407,7 +1707,7 @@
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
    "position": [
-    2400,
+    3000,
     900
    ],
    "parameters": {
@@ -1433,7 +1733,7 @@
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
    "position": [
-    2700,
+    3300,
     900
    ],
    "parameters": {
@@ -1465,7 +1765,7 @@
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
    "position": [
-    3000,
+    3600,
     900
    ],
    "parameters": {
@@ -1507,7 +1807,7 @@
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
    "position": [
-    3300,
+    3900,
     900
    ],
    "parameters": {
@@ -1536,7 +1836,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3600,
+    4200,
     900
    ],
    "parameters": {
@@ -1549,7 +1849,7 @@
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.3,
    "position": [
-    3900,
+    4500,
     900
    ],
    "parameters": {
@@ -1614,7 +1914,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    4200,
+    4800,
     820
    ],
    "parameters": {
@@ -1627,7 +1927,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    4500,
+    5100,
     820
    ],
    "parameters": {
@@ -1665,7 +1965,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    4800,
+    5400,
     820
    ],
    "parameters": {
@@ -1678,7 +1978,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    4200,
+    4800,
     1000
    ],
    "parameters": {
@@ -1710,7 +2010,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    4500,
+    5100,
     1000
    ],
    "parameters": {
@@ -1723,7 +2023,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    4800,
+    5400,
     1000
    ],
    "parameters": {
@@ -1764,7 +2064,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    5100,
+    5700,
     1000
    ],
    "parameters": {
@@ -1777,7 +2077,7 @@
    "type": "n8n-nodes-base.stickyNote",
    "typeVersion": 1,
    "position": [
-    3220,
+    3820,
     1220
    ],
    "parameters": {
@@ -1793,7 +2093,7 @@
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
    "position": [
-    3300,
+    3900,
     1380
    ],
    "parameters": {
@@ -1822,7 +2122,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3600,
+    4200,
     1380
    ],
    "parameters": {
@@ -1835,7 +2135,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    3300,
+    3900,
     1540
    ],
    "parameters": {
@@ -1867,7 +2167,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3600,
+    4200,
     1540
    ],
    "parameters": {
@@ -1880,7 +2180,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3300,
+    3900,
     1700
    ],
    "parameters": {
@@ -1893,7 +2193,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    3600,
+    4200,
     1700
    ],
    "parameters": {
@@ -1906,7 +2206,7 @@
    "type": "n8n-nodes-base.stickyNote",
    "typeVersion": 1,
    "position": [
-    5620,
+    6220,
     220
    ],
    "parameters": {
@@ -1922,7 +2222,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    5700,
+    6300,
     400
    ],
    "parameters": {
@@ -1935,7 +2235,7 @@
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
    "position": [
-    6000,
+    6600,
     400
    ],
    "parameters": {
@@ -1964,7 +2264,7 @@
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    6300,
+    6900,
     400
    ],
    "parameters": {
@@ -1977,7 +2277,7 @@
    "type": "n8n-nodes-base.googleSheets",
    "typeVersion": 4.7,
    "position": [
-    6600,
+    7200,
     400
    ],
    "parameters": {
@@ -2026,6 +2326,17 @@
    "main": [
     [
      {
+      "node": "בדיקת חתימה",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "בדיקת חתימה": {
+   "main": [
+    [
+     {
       "node": "פענוח ההודעה",
       "type": "main",
       "index": 0
@@ -2059,7 +2370,7 @@
    "main": [
     [
      {
-      "node": "שלב הלקוח",
+      "node": "קוד אימות?",
       "type": "main",
       "index": 0
      },
@@ -2071,11 +2382,85 @@
     ]
    ]
   },
+  "קוד אימות?": {
+   "main": [
+    [
+     {
+      "node": "Supabase — אימות טלפון",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "שלב הלקוח",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
   "השלמת שם פרופיל?": {
    "main": [
     [
      {
       "node": "customers — השלמת שם פרופיל",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Supabase — אימות טלפון": {
+   "main": [
+    [
+     {
+      "node": "תוצאת אימות",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "תוצאת אימות": {
+   "main": [
+    [
+     {
+      "node": "קישור לקוח לחשבון",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "בניית הודעת וואטסאפ",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "קישור לקוח לחשבון": {
+   "main": [
+    [
+     {
+      "node": "לקוח חדש בגיליון?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "לקוח חדש בגיליון?": {
+   "main": [
+    [
+     {
+      "node": "customers — לקוח מהאתר",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "customers — קישור לחשבון",
       "type": "main",
       "index": 0
      }

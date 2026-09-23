@@ -28,6 +28,7 @@ VERIFY_TOKEN = os.environ.get('META_VERIFY_TOKEN', '<META_VERIFY_TOKEN>')
 GRAPH = 'https://graph.facebook.com/' + os.environ.get('WA_GRAPH_VERSION', 'v23.0')
 PHONE_ID = os.environ.get('WA_PHONE_ID', '<WA_PHONE_ID>')
 STORAGE = 'https://owvvkwxzjuglrfeuujez.supabase.co/storage/v1'
+REST = 'https://owvvkwxzjuglrfeuujez.supabase.co/rest/v1'
 SUPPORT_BUCKET = 'support-media'  # דלי פרטי — תמונות לקוחות
 
 SHEETS = {  # לשונית → מזהה הגיליון
@@ -154,6 +155,22 @@ def is_false(field):
     return condition(field, '={{ ' + field + ' }}', {'type': 'boolean', 'operation': 'false', 'singleValue': True})
 
 
+def not_empty(field):
+    return condition(field + 'ne', '={{ ' + field + ' }}', {'type': 'string', 'operation': 'notEmpty', 'singleValue': True})
+
+
+def empty(field):
+    return condition(field + 'e', '={{ ' + field + ' }}', {'type': 'string', 'operation': 'empty', 'singleValue': True})
+
+
+def exists(field):
+    return condition(field + 'x', '={{ ' + field + ' }}', {'type': 'string', 'operation': 'exists', 'singleValue': True})
+
+
+def not_exists(field):
+    return condition(field + 'nx', '={{ ' + field + ' }}', {'type': 'string', 'operation': 'notExists', 'singleValue': True})
+
+
 def http(name, method, url, credentials, position, **params):
     add(name, 'httpRequest', 4.2, {'method': method, 'url': url, 'authentication': 'genericCredentialType',
                                    'genericAuthType': 'httpHeaderAuth', **params}, position,
@@ -170,8 +187,9 @@ HISTORY = "($json.history ? '\\n\\nהשיחה עד עכשיו (לפני ההוד
 # ═══ ① קליטה וזיהוי ═════════════════════════════════════════════════════
 note('① קליטה וזיהוי',
      'Meta מאמתת את ה-webhook ב-GET, ושולחת הודעות ב-POST.\n'
-     'כל הודעה: פענוח → חיפוש הטלפון ב-customers → שלב הלקוח.',
-     [-80, -420], 1460, 860, 7)
+     'כל הודעה: בדיקת החתימה של Meta → פענוח → חיפוש הטלפון ב-customers →\n'
+     'קוד אימות מהאתר? → שלב הלקוח.',
+     [-80, -420], 2060, 840, 7)
 
 add('Meta — אימות webhook (GET)', 'webhook', 2,
     {'httpMethod': 'GET', 'path': PATH, 'responseMode': 'responseNode', 'options': {}},
@@ -183,23 +201,64 @@ add('החזרת hub.challenge', 'respondToWebhook', 1.4, {
     'options': {'responseCode': 200}}, [300, -260])
 connect('Meta — אימות webhook (GET)', 'החזרת hub.challenge')
 
+# rawBody: הגוף הגולמי נשמר בשדה הבינארי data — בלעדיו אי אפשר לבדוק את החתימה של Meta
 add('וואטסאפ — הודעה נכנסת (POST)', 'webhook', 2,
-    {'httpMethod': 'POST', 'path': PATH, 'responseMode': 'onReceived', 'responseData': 'noData', 'options': {}},
+    {'httpMethod': 'POST', 'path': PATH, 'responseMode': 'onReceived', 'responseData': 'noData',
+     'options': {'rawBody': True}},
     [0, 0], webhookId=stable_id('webhook-post'))
-code('פענוח ההודעה', '01-parse-message.js', [300, 0])
-sheet_read('customers — קריאה', 'customers', [600, 0])
-code('זיהוי לקוח', '02-identify-customer.js', [900, 0])
+code('בדיקת חתימה', '00-verify-signature.js', [300, 0])
+code('פענוח ההודעה', '01-parse-message.js', [600, 0])
+sheet_read('customers — קריאה', 'customers', [900, 0])
+code('זיהוי לקוח', '02-identify-customer.js', [1200, 0])
+switch('קוד אימות?', [
+    ('קוד אימות מהאתר', not_empty('$json.verifyCode')),
+    ('הודעה רגילה', empty('$json.verifyCode')),
+], [1500, 0])
 switch('שלב הלקוח', [
     ('מספר חדש', equals('$json.stage', 'new')),
     ('ממתין לשם', equals('$json.stage', 'awaiting_name')),
     ('לקוח מוכר', equals('$json.stage', 'known')),
-], [1200, 0])
-chain('וואטסאפ — הודעה נכנסת (POST)', 'פענוח ההודעה', 'customers — קריאה', 'זיהוי לקוח', 'שלב הלקוח')
+], [1800, 0])
+chain('וואטסאפ — הודעה נכנסת (POST)', 'בדיקת חתימה', 'פענוח ההודעה', 'customers — קריאה', 'זיהוי לקוח',
+      'קוד אימות?')
+connect('קוד אימות?', 'שלב הלקוח', 1)
 
 # ענף מקביל: משלים את שם הפרופיל בוואטסאפ ללקוחות ותיקים
 code('השלמת שם פרופיל?', '03-fill-profile-name.js', [900, 260])
 sheet_update('customers — השלמת שם פרופיל', 'customers', 'phone', [1200, 260])
 chain('זיהוי לקוח', 'השלמת שם פרופיל?', 'customers — השלמת שם פרופיל')
+
+# ═══ ⓪ אימות טלפון מהאתר ═════════════════════════════════════════════════
+note('אימות טלפון מהאתר',
+     '"קוד אימות: 482913" נשלח מדף האימות באתר. Supabase בודק שהקוד שייך לטלפון ששלח\n'
+     '(rpc verify_phone, רק עם המפתח הסודי). אחרי אימות — הלקוח בגיליון מקושר לחשבון.',
+     [1420, 460], 1500, 540, 1)
+
+add('Supabase — אימות טלפון', 'httpRequest', 4.2, {
+    'method': 'POST', 'url': REST + '/rpc/verify_phone',
+    'authentication': 'genericCredentialType', 'genericAuthType': 'httpHeaderAuth',
+    'sendBody': True, 'specifyBody': 'json',
+    'jsonBody': '={{ JSON.stringify({ p_phone: $json.phone, p_code: $json.verifyCode }) }}',
+    'options': {'timeout': 15000}}, [1500, 620], credentials=SUPABASE, onError='continueRegularOutput')
+code('תוצאת אימות', '80-verification-result.js', [1800, 620])
+connect('קוד אימות?', 'Supabase — אימות טלפון', 0)
+connect('Supabase — אימות טלפון', 'תוצאת אימות')
+
+code('קישור לקוח לחשבון', '81-link-customer.js', [1800, 840])
+switch('לקוח חדש בגיליון?', [
+    ('לקוח חדש', exists('$json.source')),
+    ('לקוח קיים', not_exists('$json.source')),
+], [2100, 840])
+sheet_append('customers — לקוח מהאתר', 'customers', [2400, 760], new_columns=True)
+sheet_update('customers — קישור לחשבון', 'customers', 'phone', [2400, 920])
+connect('תוצאת אימות', 'קישור לקוח לחשבון')
+connect('קישור לקוח לחשבון', 'לקוח חדש בגיליון?')
+connect('לקוח חדש בגיליון?', 'customers — לקוח מהאתר', 0)
+connect('לקוח חדש בגיליון?', 'customers — קישור לחשבון', 1)
+
+# כל האזורים שאחרי הקליטה זזים ימינה, כדי לפנות מקום לבדיקת החתימה ולאימות
+SHIFT_FROM = len(nodes)
+SHIFT_X = 600
 
 # ═══ ② לקוח חדש — היכרות ════════════════════════════════════════════════
 note('② לקוח חדש — היכרות',
@@ -387,11 +446,14 @@ code('רישום שיחה', '71-chat-log.js', [6300, 400])
 sheet_append('chat_log — רישום', 'chat_log', [6600, 400])
 chain('בניית הודעת וואטסאפ', 'שליחה בוואטסאפ', 'רישום שיחה', 'chat_log — רישום')
 
-REPLIES = ['הודעת פתיחה', 'ברכה ותפריט', 'תשובת מכירות', 'פרטי מוצר', 'סיכום הזמנה', 'אישור הזמנה',
+REPLIES = ['תוצאת אימות', 'הודעת פתיחה', 'ברכה ותפריט', 'תשובת מכירות', 'פרטי מוצר', 'סיכום הזמנה', 'אישור הזמנה',
            'הזמנה נכשלה', 'ביטול הזמנה', 'בקשת פירוט', 'אישור פנייה', 'אישור פנייה מתמונה', 'אישור צירוף',
            'תשובת כושר', 'סטטוס משלוח', 'קישור הרשמה', 'שאלת הבהרה']
 for reply in REPLIES:
     connect(reply, 'בניית הודעת וואטסאפ')
+
+for moved in nodes[SHIFT_FROM:]:
+    moved['position'] = [moved['position'][0] + SHIFT_X, moved['position'][1]]
 
 # ─── כתיבה ──────────────────────────────────────────────────────────────
 workflow = {
