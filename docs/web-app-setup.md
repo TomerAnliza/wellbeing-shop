@@ -2,7 +2,7 @@
 
 - **תאריך:** 7 בספטמבר 2026
 - **סטטוס:** שלד נקי, בלי פיצ'רים. מממש את [tech-stack.md](tech-stack.md)
-  בשכבת ה-Framework בלבד. Supabase ו-WhatsApp עדיין לא מחוברים.
+  בשכבת ה-Framework בלבד. Supabase עדיין לא מחובר.
 - **מיקום בריפו:** `web/`
 
 ## מה הוקם
@@ -28,8 +28,8 @@ npm install
 npm run dev
 ```
 
-בדפדפן, ב-`http://localhost:3000`, מופיע דף עם הכותרת "Wellbeing" ומשפט
-ההבטחה של המוצר, מיושר לימין.
+בדפדפן, ב-`http://localhost:3000`, מופיע דף placeholder עם משפט ההבטחה
+של המוצר, מיושר לימין.
 
 בדיקת build כמו בפרודקשן:
 
@@ -63,12 +63,11 @@ npm run build
 
 ## משתני סביבה
 
-עדיין אין. כשייכנסו Supabase ו-WhatsApp, הם יוגדרו ב-Vercel דרך
-`vercel env` וב-`web/.env.local` מקומית. `.env*` חסום ב-`.gitignore`.
+עדיין אין. כשייכנס Supabase, הוא יוגדר ב-Vercel דרך `vercel env`
+וב-`web/.env.local` מקומית. `.env*` חסום ב-`.gitignore`.
 
 ## מה הלאה
 
-1. העיצוב שתומר מוסר נכנס ל-`design/`.
-2. תוכנית מימוש למסכים לפי [spec-wellbeing-mvp-screens.md](spec-wellbeing-mvp-screens.md),
-   עם חוות דעת של צחי.
+1. עיצוב המסכים החסרים — ראו "מה חסר בעיצוב" ב-[spec-mvp-screens.md](spec-mvp-screens.md).
+2. תוכנית מימוש למסכים, עם חוות דעת של צחי.
 3. חיבור Supabase: פרויקט, סכמה, RLS, Auth.

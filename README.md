@@ -13,19 +13,13 @@
 - **הקוד והתיעוד חיים ב-GitHub:** https://github.com/TomerAnliza/wellbeing-app
 - סוכן שמצטרף מתחיל ב-[AGENTS.md](AGENTS.md), ואז `git pull`
 - **העיצוב — מקור האמת:** [design/](design/), מתועד ב-[docs/design-system.md](docs/design-system.md)
-- אפיון המסכים הפעיל: [docs/spec-fitness-mvp-screens.md](docs/spec-fitness-mvp-screens.md)
+- אפיון המסכים: [docs/spec-mvp-screens.md](docs/spec-mvp-screens.md)
 - הסטאק המומלץ: [docs/tech-stack.md](docs/tech-stack.md)
 
 ## סטטוס
 
-- **7 בספטמבר 2026:** הפרויקט אופס למצב נקי. `docs/` מכיל רק את האפיון
-  הפעיל ואת הסטאק. תיקיות `design/`, `ideas/` ו-`docs/journal/` רוקנו.
-- **7 בספטמבר 2026:** הפרויקט עלה ל-GitHub. מעכשיו כל שינוי עובר דרך
-  Git: pull, קומיט, push. נוהל: [docs/git-workflow.md](docs/git-workflow.md).
-- **23 בספטמבר 2026:** הפרויקט עבר ל-**design-first**, והמוצר השתנה
-  ממעקב הרגלים למעקב פעילות ספורטיבית — בעקבות העיצוב שנמסר. התיעוד
-  הקודם לא נמחק, אלא סומן כמוחלף.
-  רקע: [docs/journal/2026-09-23-design-first-pivot.md](docs/journal/2026-09-23-design-first-pivot.md).
+- **העיצוב:** נמסר ומתועד. פרוטוטייפ חי — פתיחת
+  [`design/Wellness App.html`](design/Wellness%20App.html) בדפדפן.
 - **הקוד:** `web/` מכיל שלד Next.js עם placeholder. **אפס מסכים ממומשים.**
 - **מה הלאה:** עיצוב המסכים החסרים — הרשמה, מצב ריק, שגיאה, טעינה
-  ודסקטופ. רשימה מלאה תחת "מה חסר בעיצוב" באפיון הפעיל.
+  ודסקטופ. רשימה מלאה תחת "מה חסר בעיצוב" באפיון.
