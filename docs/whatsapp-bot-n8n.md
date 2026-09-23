@@ -39,7 +39,8 @@
 | רכיב | ערך |
 |---|---|
 | גיליון החנות | [wellbeing-app — חנות](https://docs.google.com/spreadsheets/d/1TfXLEnReGfAFv2MfCeqfO-cdac81__YpRrsAB7bD8fU/edit) — `products`, `customers`, `chat_log` |
-| גיליון ההזמנות | [wellbeing-app — הזמנות](https://docs.google.com/spreadsheets/d/1Xt_X5z6FoElN9FpCrGihEtzNYF_pOEC0-idbGd3NQAY/edit) — `orders` (הזמנות `O-` ופניות `S-`) |
+| גיליון ההזמנות | [wellbeing-app — הזמנות](https://docs.google.com/spreadsheets/d/1Xt_X5z6FoElN9FpCrGihEtzNYF_pOEC0-idbGd3NQAY/edit) — `orders` (הזמנות `O-`. פניות `S-` ישנות, עד 23 בספטמבר 2026) |
+| גיליון השירות | [wellbeing-app — שירות לקוחות](https://docs.google.com/spreadsheets/d/11HaiHwuVyGoqmf7zss8d5iwnn2B8CG0hvIfkuGqej2Q/edit) — `tickets` (פניות `S-`) |
 | Credential לגיליון | `tomer_analiza_google_sheets` (קיים) |
 | Credential ל-OpenAI | `a601_openai` (קיים). מודל: `gpt-4o-mini` |
 | Credential לוואטסאפ | `WhatsApp Cloud API — wellbeing shop bot` — **נוצר עבור הבוט**, Bearer מתוך `automation/whatsapp/.env` |
@@ -95,11 +96,16 @@
 
 ## התראה לנציג במייל
 
-- **תרחיש:** `wellbeing — התראה על הזמנה חדשה` (`BHRaI5jmFMahyvQr`), פעיל.
+- **תרחיש:** `wellbeing — התראה על הזמנה או פנייה` (`BHRaI5jmFMahyvQr`), פעיל.
   קוד המקור: [`n8n/build_notify_workflow.py`](../n8n/build_notify_workflow.py)
-- **איך:** כל דקה קורא את `orders`, ושולח מייל ל-`tomer@analiza-college.co.il` על
-  כל שורה חדשה — 🛒 הזמנה (`O-`) או 🛟 פנייה לשירות (`S-`). במייל: פרטי השורה,
-  כפתור "לכתוב ללקוח בוואטסאפ" וקישור לגיליון
+- **איך:** כל דקה קורא את `orders` בגיליון ההזמנות ואת `tickets` בגיליון השירות, ושולח
+  מייל ל-`tomer@analiza-college.co.il`: 🛒 הזמנה חדשה, 🛟 פנייה חדשה (עם התמונות שבה),
+  📷 תמונה שנוספה לפנייה קיימת. במייל: פרטי השורה, כפתור "לכתוב ללקוח בוואטסאפ"
+  וקישור לגיליון
+- **תמונה שנוספה:** לכל פנייה נשמר ב-static data מספר הקישורים בעמודה `images`. גדל — נשלח
+  מייל 📷 עם התמונות החדשות בלבד
+- **מ-23 בספטמבר 2026** הפניות נכתבות לגיליון השירות, לא ל-`orders`. פירוט באפיון:
+  [שירות לקוחות — פניות ותמונות](spec-shop-and-agent.md#שירות-לקוחות--פניות-ותמונות)
 - **למה בדיקה כל דקה:** Google Sheets אינו שולח אירוע על שורה חדשה, ולצומת
   ה-Trigger של Sheets נדרש credential מסוג אחר. הבדיקה תופסת גם שורות שנוספו
   ידנית בגיליון
@@ -166,6 +172,7 @@
 | 25 | קטלבל → "תזמין לי 8 קטלבלים" | order | "אין במלאי מספיק…" + [להזמין יחידה אחת] |
 | 26 | "וכמה עולה הבלוק שהזמנתי?" | sales | 39 ₪ — זיהה את הבלוק מהשיחה |
 | 27 | גומיות × 2, אחרי המעבר לגיליון הזמנות נפרד | order | שורה בגיליון ההזמנות, מלאי P-004 ירד מ-18 ל-16, מייל נשלח |
+| 28 | "שירות לקוחות" → "הגיע לי מזרן קרוע בהזמנה האחרונה" | support | שורה `S-1790169656814` בגיליון השירות, "פתחתי פנייה… אפשר לשלוח תמונה", מייל 🛟 הגיע |
 
 שורות הבדיקה נשארו בגיליון, עם מספרי `999…` — אפשר למחוק אותן.
 

@@ -2,7 +2,8 @@
 import json, os, uuid
 
 SHEET_ID = '1TfXLEnReGfAFv2MfCeqfO-cdac81__YpRrsAB7bD8fU'   # חנות: products, customers, chat_log
-ORDERS_SHEET_ID = '1Xt_X5z6FoElN9FpCrGihEtzNYF_pOEC0-idbGd3NQAY'   # הזמנות ופניות — גיליון נפרד
+ORDERS_SHEET_ID = '1Xt_X5z6FoElN9FpCrGihEtzNYF_pOEC0-idbGd3NQAY'   # הזמנות — גיליון נפרד
+TICKETS_SHEET_ID = '11HaiHwuVyGoqmf7zss8d5iwnn2B8CG0hvIfkuGqej2Q'  # פניות לשירות — גיליון נפרד
 GS_CRED = {'googleSheetsOAuth2Api': {'id': 'Bsc5ulPj2pt9pUPV', 'name': 'tomer_analiza_google_sheets'}}
 AI_CRED = {'openAiApi': {'id': '5Ww4GeJzKnSYMPmv', 'name': 'a601_openai'}}
 WA_CRED = {'httpHeaderAuth': {'id': 'Cm2UtQogNOYbj6nJ', 'name': 'WhatsApp Cloud API — wellbeing shop bot'}}
@@ -31,7 +32,7 @@ def code(name, js, pos, **extra):
     return node(name, 'n8n-nodes-base.code', 2, {'jsCode': js}, pos, **extra)
 
 def sheet(tab):
-    doc_id = ORDERS_SHEET_ID if tab == 'orders' else SHEET_ID
+    doc_id = {'orders': ORDERS_SHEET_ID, 'tickets': TICKETS_SHEET_ID}.get(tab, SHEET_ID)
     return ({'__rl': True, 'mode': 'id', 'value': doc_id},
             {'__rl': True, 'mode': 'name', 'value': tab})
 
@@ -470,20 +471,25 @@ return [{ json: { phone: r.phone, kind: 'text', route: 'support',
 """, [R + 260, y + 140])
 link('יש פירוט לפנייה?', 'בקשת פירוט', 0)
 code('שורת פנייה', r"""
-// פנייה לשירות נשמרת ב-orders בלי מוצרים ובסטטוס new — הנציג רואה אותה עם שאר ההזמנות
+// פנייה לשירות נכתבת לגיליון השירות (tickets). הפנייה הפתוחה נזכרת 30 דקות —
+// תמונה שתגיע בזמן הזה תצטרף אליה ולא תפתח פנייה חדשה
 const r = $input.first().json;
-return [{ json: { order_id: 'S-' + Date.now(), created_at: r.received_at, user_id: r.user_id,
-  customer_name: r.name, phone: r.phone, items: '', subtotal_ils: '', discount_pct: '', total_ils: '',
-  status: 'new', rep_notes: r.text } }];
+const id = 'S-' + Date.now();
+const s = $getWorkflowStaticData('global');
+s.tickets = s.tickets || {};
+s.tickets[r.phone] = { id, at: Date.now() };
+return [{ json: { ticket_id: id, created_at: r.received_at, phone: r.phone, customer_name: r.name,
+  message: r.text, images: '', image_paths: '', status: 'new', rep_notes: '' } }];
 """, [R + 260, y + 280])
 link('יש פירוט לפנייה?', 'שורת פנייה', 1)
-sheets_append('orders — פנייה חדשה', 'orders', [R + 520, y + 280])
-link('שורת פנייה', 'orders — פנייה חדשה')
+sheets_append('tickets — פנייה חדשה', 'tickets', [R + 520, y + 280])
+link('שורת פנייה', 'tickets — פנייה חדשה')
 code('אישור פנייה', WHO + r"""
+const t = $('שורת פנייה').first().json.ticket_id;
 return [{ json: { phone: who.phone, kind: 'text', route: 'support',
-  text: `תודה${who.name && who.name !== 'לקוח' ? ', ' + who.name : ''}! רשמתי את הפנייה, ונציג יחזור אלייך כאן בוואטסאפ בהקדם 🙏` } }];
+  text: `תודה${who.name && who.name !== 'לקוח' ? ', ' + who.name : ''}! פתחתי פנייה (${t}), ונציג יחזור אלייך כאן בוואטסאפ בהקדם 🙏\nאם יש תמונה של המוצר או של החבילה — אפשר לשלוח אותה עכשיו, והיא תצורף לפנייה.` } }];
 """, [R + 780, y + 280])
-link('orders — פנייה חדשה', 'אישור פנייה')
+link('tickets — פנייה חדשה', 'אישור פנייה')
 
 # fitness
 openai('יועץ כושר',
