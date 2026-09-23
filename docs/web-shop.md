@@ -61,3 +61,24 @@ npm run dev
 - בדפדפן, ברוחב מובייל: 10 מוצרים עם תמונות, סינון "כוח" מחזיר 3 מוצרים,
   קישורי "שאל" וה-FAB נכונים, טאב "ההזמנות שלי" מוצג
 - הודעה עם `(P-004)` לבוט מחזירה את כרטיס המוצר
+
+## פריסה — Vercel
+
+- **כתובת:** https://wellbeing-shop.vercel.app (מפנה ל-`/app/shop`)
+- **פרויקט:** `wellbeing-shop` בחשבון `tmx-aa90`, תוכנית חינמית. זה פרויקט חדש;
+  הפרויקט הישן `wellbeing-app` לא נגעו בו
+- **משתנה סביבה:** `PRODUCTS_URL` מוגדר ל-Production
+- **`web/vercel.json`** קובע `framework: nextjs`. בלעדיו פרויקט שנוצר מה-CLI נבנה
+  כאתר סטטי ונכשל ב-"Output Directory public is empty"
+- **פריסה ידנית**, מתוך `web/`:
+
+  ```bash
+  vercel deploy --prod --scope tmx-aa90
+  ```
+
+- **פריסה אוטומטית בכל push — עוד לא מחוברת.** החיבור ל-GitHub מה-CLI נכשל, כי
+  אפליקציית Vercel ב-GitHub עוד לא קיבלה גישה לריפו החדש. לחיבור:
+  Vercel → wellbeing-shop → Settings → Git → Connect → `TomerAnliza/wellbeing-shop`,
+  ובהגדרות Build: **Root Directory = `web`**
+
+נבדק ב-23 בספטמבר 2026: 10 מוצרים עם תמונות מ-Supabase, דרך `next/image` של Vercel.
