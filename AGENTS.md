@@ -11,7 +11,8 @@
 
 | פרט | ערך |
 |---|---|
-| ריפו | https://github.com/TomerAnliza/wellbeing-app (ציבורי) |
+| ריפו | https://github.com/TomerAnliza/wellbeing-shop (ציבורי) — `origin` |
+| המקור | https://github.com/TomerAnliza/wellbeing-app — `upstream`, **push חסום**. הפרויקט הזה הוא fork, ואינו דוחף למקור |
 | חשבון GitHub | `TomerAnliza`, החשבון של tomer@analiza-college.co.il |
 | ענף ראשי | `main` |
 | פרוטוקול | HTTPS דרך `gh` (המחשב הזה כבר מחובר; `gh auth status` לבדיקה) |

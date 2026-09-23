@@ -2,7 +2,7 @@
 
 - **תאריך:** 7 בספטמבר 2026
 - **תקף מ:** הרגע שהפרויקט עלה ל-GitHub. כל סוכן וכל אדם בצוות עובד לפיו.
-- **ריפו:** https://github.com/TomerAnliza/wellbeing-app (ציבורי)
+- **ריפו:** https://github.com/TomerAnliza/wellbeing-shop (ציבורי). fork של `wellbeing-app`, שמחובר כ-`upstream` עם push חסום
 
 ## גישה
 
@@ -10,7 +10,7 @@
 |---|---|
 | חשבון GitHub | `TomerAnliza`, החשבון של tomer@analiza-college.co.il |
 | ענף ראשי | `main` |
-| שכפול | `gh repo clone TomerAnliza/wellbeing-app` או `git clone https://github.com/TomerAnliza/wellbeing-app.git` |
+| שכפול | `gh repo clone TomerAnliza/wellbeing-shop` או `git clone https://github.com/TomerAnliza/wellbeing-shop.git` |
 | הרשאה | `gh auth login` פעם אחת בחשבון הזה. במחשב של תומר כבר מחובר, `gh auth status` לבדיקה |
 | זהות לקומיטים | בתוך הריפו: `git config user.name "Tomer"` ו-`git config user.email "tomer@analiza-college.co.il"` |
 

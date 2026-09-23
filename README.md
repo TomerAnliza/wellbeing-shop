@@ -10,7 +10,8 @@
 ממנו נגזר האפיון, וממנו נכתב הקוד — והכול מתועד במסמכים ברורים לבני אדם
 תחת [docs/](docs/).
 
-- **הקוד והתיעוד חיים ב-GitHub:** https://github.com/TomerAnliza/wellbeing-app
+- **הקוד והתיעוד חיים ב-GitHub:** https://github.com/TomerAnliza/wellbeing-shop
+  (fork של [wellbeing-app](https://github.com/TomerAnliza/wellbeing-app), מ-23 בספטמבר 2026)
 - סוכן שמצטרף מתחיל ב-[AGENTS.md](AGENTS.md), ואז `git pull`
 - **העיצוב — מקור האמת:** [design/](design/), מתועד ב-[docs/design-system.md](docs/design-system.md)
 - אפיון המסכים: [docs/spec-mvp-screens.md](docs/spec-mvp-screens.md)
