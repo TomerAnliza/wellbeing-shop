@@ -13,6 +13,9 @@
 | `/login` | אימייל וסיסמה. `?next=` — לאן לחזור, רק נתיב פנימי |
 | `/verify-phone` | קוד בן 6 ספרות, כפתור לוואטסאפ, והדף ממשיך לבד כשהבוט מאמת |
 | `/app/profile` | שם, טלפון מאומת, "איתנו מאז", יציאה |
+| `/forgot-password` | בקשת קישור איפוס. תשובה זהה לכל אימייל |
+| `/auth/confirm` | הקישור מהמייל: `verifyOtp` בשרת, ואז `next` |
+| `/reset-password` | סיסמה חדשה (8+, פעמיים) → "היום" עם טוסט "הסיסמה עודכנה" |
 | `/app`, `/app/new`, `/app/progress` | דורשים משתמש מחובר **עם טלפון מאומת** |
 | `/app/shop` | פתוח לכולם. מחובר רואה אווטאר, אורח רואה "כניסה" |
 
@@ -95,3 +98,33 @@ python3 supabase/tests/rls_check.py
 משתני סביבה חדשים: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 (Production ו-Development). המפתח הציבורי מיועד להופיע בדפדפן — ההגנה על הנתונים היא RLS.
 **Preview — לא הוגדר** (ה-CLI סירב בלי ענף git). להוסיף בממשק Vercel אם יידרש.
+
+## שחזור סיסמה — 24 בספטמבר 2026
+
+Supabase יוצר ובודק את הקישור; המשלוח עובר ל-n8n (Send Email Hook), דרך Gmail של
+tomer@analiza-college.co.il. אפיון: [spec-auth-and-app.md](spec-auth-and-app.md#שחזור-סיסמה--מיילים-דרך-n8n).
+
+- **n8n:** `wellbeing — מיילי התחברות (Supabase)` (`dIAIooHRDqNKOQXC`), קוד המקור ב-[`n8n/auth-email/`](../n8n/auth-email/).
+  בודק חתימת Standard Webhooks, בונה מייל בעברית ושולח. 200 / 401 / 500. הרצות מוצלחות לא
+  נשמרות — הן מכילות קישורי איפוס
+- **הסוד:** נוצר במחשב, נשמר ב-Keychain (`SUPABASE_EMAIL_HOOK_SECRET_WELLBEING`), ב-Supabase
+  (`hook_send_email_secrets`), ובמשתנה `SUPABASE_EMAIL_HOOK_SECRET` של n8n. n8n הופעל מחדש דרך
+  SSH עם ה-override — חזר תוך 16 שניות, על האימג'ים המותאמים
+- **מגבלת מיילים:** הועלתה מ-2 ל-30 בשעה (`rate_limit_email_sent`). Supabase מאפשר את זה כשהמשלוח
+  לא דרך ה-SMTP המובנה
+
+**נמצא בבדיקה ותוקן:**
+- המחלקה `URL` לא קיימת בסביבת הקוד של n8n (task runner). הצומת נכשל, n8n החזיר גוף שאינו
+  JSON, ו-Supabase החזיר לאתר 500 ("Error unmarshaling JSON output"). הוחלף ב-regex
+- הקישור מגיע עם `token_hash` שמתחיל ב-`pkce_`, כי `@supabase/ssr` עובד ב-PKCE. `verifyOtp` בשרת
+  מקבל אותו. **לא נבדק:** פתיחה במכשיר אחר מזה שביקש את השחזור
+
+**נבדק בפרודקשן** (משתמש בדיקה `tomer+wbreset…@analiza-college.co.il`, נמחק בסוף):
+
+| # | בדיקה | תוצאה |
+|---:|---|---|
+| 13 | "שכחתי סיסמה" | המייל הגיע לתיבה תוך דקה, בעברית, עם השם |
+| 14 | הקישור → סיסמה חדשה | "היום" + "הסיסמה עודכנה". הישנה: `invalid_credentials`. החדשה: נכנסת |
+| 15 | אותו קישור שוב | `/forgot-password?error=link` |
+| 16 | webhook בלי חתימה | 401 |
+| — | `/reset-password` בלי session | `/forgot-password?error=link` |

@@ -13,7 +13,7 @@ export function ForgotForm() {
       <div className="flex flex-col items-center gap-3 text-center" role="status">
         <span className="ms text-[40px] text-brand-icon" aria-hidden>mark_email_read</span>
         <p className="text-[14px] leading-relaxed">
-          אם יש חשבון עם <b dir="ltr">{state.values?.email}</b>, שלחנו אליו קישור. הוא תקף לשעה.
+          אם יש חשבון עם <b dir="ltr" className="break-all">{state.values?.email}</b>, שלחנו אליו קישור. הוא תקף לשעה.
         </p>
         <p className="text-[12.5px] text-ink-2">לא הגיע? כדאי לבדוק בספאם.</p>
         <Link href="/login" className="mt-2 text-[13px] font-semibold text-brand-hover">חזרה לכניסה</Link>

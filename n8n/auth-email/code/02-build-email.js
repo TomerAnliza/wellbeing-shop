@@ -6,7 +6,8 @@
 
 const { user, email_data: data } = $input.first().json.payload;
 
-const site = new URL(data.redirect_to || data.site_url).origin;
+// המחלקה URL לא קיימת בסביבת הקוד של n8n (task runner) — מוציאים את ה-origin ב-regex
+const site = /^https?:\/\/[^/?#]+/.exec(data.redirect_to || data.site_url)?.[0] ?? data.site_url;
 const name = user.user_metadata?.display_name || '';
 const hello = name ? `היי ${name},` : 'היי,';
 
