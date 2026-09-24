@@ -89,5 +89,5 @@ function paceOf(minutes: number, km: number, units: "metric" | "imperial") {
   if (!Number.isFinite(perUnit) || perUnit >= 60) return "—";
   const whole = Math.floor(perUnit);
   const secs = Math.round((perUnit - whole) * 60);
-  return secs === 60 ? `${whole + 1}׳00` : `${whole}׳${String(secs).padStart(2, "0")}`;
+  return secs === 60 ? `${whole + 1}′00` : `${whole}′${String(secs).padStart(2, "0")}`;
 }

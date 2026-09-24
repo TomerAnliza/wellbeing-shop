@@ -173,7 +173,7 @@ function paceFromDistance(minutes: number, km: number, units: Units) {
     whole += 1;
     secs = 0;
   }
-  return `${whole}׳${String(secs).padStart(2, "0")}`;
+  return `${whole}′${String(secs).padStart(2, "0")}`;
 }
 
 const GPS_LABELS: Record<GpsStatus, { text: string; tone: string }> = {

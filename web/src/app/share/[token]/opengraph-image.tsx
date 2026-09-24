@@ -56,6 +56,8 @@ export default async function Image(props: { params: Promise<{ token: string }> 
   }
 
   const type = activity ? ACTIVITY_TYPES[activity.type] : null;
+  // שורת המדדים: row-reverse שם את הפריט הראשון (דקות) בצד ימין, כמו בקריאה מימין לשמאל.
+  // בתוך כל פריט היחידה משמאל למספר — כך "11 דק׳" נקרא נכון
   const km = activity?.distance_km;
 
   return new ImageResponse(
@@ -74,9 +76,9 @@ export default async function Image(props: { params: Promise<{ token: string }> 
             {activity && type ? visual(`${type.name} של ${activity.first_name}`) : visual("אימון")}
           </div>
           {activity && (
-            <div style={{ display: "flex", fontSize: 48, color: "#1c1b19", marginTop: 28, gap: 40 }}>
-              <span>{`${activity.duration_minutes} ${visual("דק׳")}`}</span>
-              {km ? <span>{`${km} ${visual("ק״מ")}`}</span> : null}
+            <div style={{ display: "flex", flexDirection: "row-reverse", fontSize: 48, color: "#1c1b19", marginTop: 28, gap: 40 }}>
+              <span>{`${visual("דק׳")} ${activity.duration_minutes}`}</span>
+              {km ? <span>{`${visual("ק״מ")} ${km}`}</span> : null}
             </div>
           )}
         </div>
