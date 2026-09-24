@@ -128,3 +128,14 @@ export async function setNewPassword(_prev: FormState, formData: FormData): Prom
 
   redirect("/app?password=1");
 }
+
+// ── מחיקת חשבון ─────────────────────────────────────────────────────
+// מוחקת את המשתמש המחובר, ואיתו (cascade) פרופיל, אימונים, מסלולים ושיתופים.
+// נתוני וואטסאפ וגיליונות לא נמחקים כאן — ראו /privacy
+export async function deleteAccount(): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("delete_my_account");
+  if (error) return { error: "לא הצלחנו למחוק את החשבון. נסו שוב, או כתבו לנו." };
+  await supabase.auth.signOut();
+  redirect("/?deleted=1");
+}

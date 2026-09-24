@@ -1,4 +1,5 @@
 // רכיבי תצוגה משותפים למסכי האפליקציה, לפי העיצוב (docs/design-system.md)
+import Link from "next/link";
 import { ACTIVITY_TYPES, activityMeta, type Units } from "@/lib/activity";
 import type { Activity } from "@/lib/activities";
 
@@ -30,6 +31,15 @@ export function Estimated({ dark = false }: { dark?: boolean }) {
   );
 }
 
+/** סימון "GPS" — מרחק שנמדד מהמסלול, לא הוערך */
+export function Measured() {
+  return (
+    <span title="נמדד מהמסלול ב-GPS" className="rounded-full bg-[oklch(0.94_0.04_150)] px-1.5 py-px text-[10px] font-medium text-[oklch(0.42_0.1_150)]">
+      GPS
+    </span>
+  );
+}
+
 /** טבעת היעד השבועי: done מתוך goal. SVG, r=45 (היקף 282.7) — כמו בעיצוב */
 export function GoalRing({ done, goal }: { done: number; goal: number }) {
   const circumference = 2 * Math.PI * 45;
@@ -55,7 +65,7 @@ export function GoalRing({ done, goal }: { done: number; goal: number }) {
 export function ActivityRow({ activity, when, units }: { activity: Activity; when: string; units: Units }) {
   const type = ACTIVITY_TYPES[activity.type];
   return (
-    <div className="flex items-center gap-3 rounded-[18px] border border-card-border bg-card px-4 py-3.5">
+    <Link href={`/app/activity/${activity.id}`} className="flex items-center gap-3 rounded-[18px] border border-card-border bg-card px-4 py-3.5 transition-colors hover:border-brand/30">
       <div className="flex size-10 flex-none items-center justify-center rounded-[13px] bg-brand-soft">
         <span className="ms text-[21px] text-brand-icon" aria-hidden>{type.icon}</span>
       </div>
@@ -63,11 +73,11 @@ export function ActivityRow({ activity, when, units }: { activity: Activity; whe
         <div className="text-[15px] font-medium">{type.name}</div>
         <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-ink-2">
           <span>{activityMeta(activity.duration_minutes, activity.distance_km, units)}</span>
-          {activity.distance_km !== null && <Estimated />}
+          {activity.distance_km !== null && (activity.distance_source === "gps" ? <Measured /> : <Estimated />)}
         </div>
       </div>
       <div className="text-[12px] text-ink-3">{when}</div>
-    </div>
+    </Link>
   );
 }
 

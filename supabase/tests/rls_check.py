@@ -6,8 +6,10 @@
 
     python3 supabase/tests/rls_check.py
 
-אפיון: docs/spec-auth-and-app.md — קריטריוני קבלה 3–5.
+אפיון: docs/spec-auth-and-app.md — קריטריוני קבלה 3–5,
+ו-docs/spec-gps-map-share.md — מסלול, שיתוף ומחיקת חשבון.
 """
+import calendar
 import json
 import subprocess
 import sys
@@ -44,7 +46,7 @@ def call(method, path, body=None, token=None, key=PUBLISHABLE, prefer=None):
 
 
 def check(name, passed, detail=''):
-    results.append(passed)
+    results.append(bool(passed))
     print(('✅' if passed else '❌'), name, ('— ' + detail) if detail and not passed else '')
 
 
@@ -58,7 +60,9 @@ def sign_up(phone):
 
 
 def activity(started='2026-09-23T07:00:00Z'):
-    return {'type': 'run', 'started_at': started, 'ended_at': '2026-09-23T07:30:00Z',
+    # סיום = התחלה + 30 דקות (הטבלה דורשת ended_at >= started_at)
+    ended = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(calendar.timegm(time.strptime(started, '%Y-%m-%dT%H:%M:%SZ')) + 1800))
+    return {'type': 'run', 'started_at': started, 'ended_at': ended,
             'duration_minutes': 30, 'distance_km': 4.8, 'calories': 318}
 
 
@@ -124,10 +128,53 @@ try:
     status, data = call('PATCH', f'/rest/v1/activities?id=eq.{activity_id}', {'calories': 1}, token=token_a)
     check('אימון שנשמר לא נערך', status in (401, 403), f'{status} {data}')
 
+    # ── מסלול ושיתוף (supabase/migrations/20260924090000_…) ──
+    route = [[[32.1, 34.8, 0], [32.101, 34.8, 30], [32.102, 34.8, 60]]]
+    status, data = call('POST', '/rest/v1/activities', {**activity('2026-09-23T08:00:00Z'), 'route': route,
+                        'distance_source': 'gps'}, token=token_a, prefer='return=representation')
+    route_activity = data[0]['id'] if status == 201 else None
+    check('אימון עם מסלול נשמר', status == 201 and data[0]['route'] == route, f'{status} {data}')
+
+    status, rows = call('GET', f'/rest/v1/activities?id=eq.{route_activity}&select=route', token=token_b)
+    check('משתמש ב׳ לא רואה מסלול של א׳', status == 200 and rows == [], f'{status} {rows}')
+
+    status, data = call('POST', '/rest/v1/rpc/share_activity', {'p_activity': route_activity, 'p_public_route': []}, token=token_b)
+    check('משתמש ב׳ לא יכול לשתף אימון של א׳', status >= 400, f'{status} {data}')
+
+    trimmed = [[[32.101, 34.8, 30]]]
+    status, share_token = call('POST', '/rest/v1/rpc/share_activity', {'p_activity': route_activity, 'p_public_route': trimmed}, token=token_a)
+    check('הבעלים משתף ומקבל אסימון', status == 200 and isinstance(share_token, str) and len(share_token) >= 20, f'{status} {share_token}')
+
+    status, shared = call('POST', '/rest/v1/rpc/get_shared_activity', {'p_token': share_token})
+    check('אורח רואה את השיתוף — עם המסלול החתוך בלבד', status == 200 and shared and shared['route'] == trimmed, f'{status} {shared}')
+    check('בשיתוף: שם פרטי, תאריך בלי שעה, בלי טלפון', status == 200 and shared and shared['first_name'] == 'בדיקה'
+          and len(shared['day']) == 10 and 'phone' not in shared and 'started_at' not in shared, f'{shared}')
+
+    status, rows = call('GET', '/rest/v1/activity_shares?select=*')
+    check('אורח לא קורא את טבלת השיתופים', status in (401, 403) or rows == [], f'{status} {rows}')
+    status, rows = call('GET', f'/rest/v1/activities?id=eq.{route_activity}&select=route')
+    check('אורח לא קורא אימונים ישירות', status in (401, 403) or rows == [], f'{status} {rows}')
+
+    status, rows = call('DELETE', f'/rest/v1/activity_shares?activity_id=eq.{route_activity}', token=token_b, prefer='return=representation')
+    check('משתמש ב׳ לא מבטל שיתוף של א׳', status == 200 and rows == [], f'{status} {rows}')
+    call('DELETE', f'/rest/v1/activity_shares?activity_id=eq.{route_activity}', token=token_a)
+    status, shared = call('POST', '/rest/v1/rpc/get_shared_activity', {'p_token': share_token})
+    check('אחרי הפסקת שיתוף — הקישור מחזיר כלום', status == 200 and shared is None, f'{status} {shared}')
+
     # ── החלפת טלפון מבטלת אימות ──
     status, data = call('PATCH', f'/rest/v1/profiles?id=eq.{user_a}', {'phone': '999000555003'}, token=token_a,
                         prefer='return=representation')
     check('טלפון חדש מבטל את האימות', status == 200 and data and not data[0]['phone_verified'], f'{status} {data}')
+
+    # ── מחיקת חשבון ──
+    status, data = call('POST', '/rest/v1/rpc/delete_my_account', {})
+    check('אורח לא יכול להפעיל מחיקת חשבון', status in (401, 403, 404), f'{status} {data}')
+    status, data = call('POST', '/rest/v1/rpc/delete_my_account', {}, token=token_b)
+    check('משתמש ב׳ מוחק את החשבון שלו', status in (200, 204), f'{status} {data}')
+    status, data = call('GET', f'/auth/v1/admin/users/{user_b}', key=SECRET, token=SECRET)
+    check('המשתמש באמת נמחק מ-Auth', status == 404, f'{status}')
+    status, rows = call('GET', '/rest/v1/profiles?select=id', token=token_a)
+    check('החשבון של א׳ לא נפגע', status == 200 and len(rows) == 1, f'{status} {rows}')
 
     # ── לא מחובר ──
     status, rows = call('GET', '/rest/v1/profiles?select=*')

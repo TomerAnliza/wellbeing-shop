@@ -20,6 +20,9 @@ export function SignupForm({ phone }: { phone?: string }) {
              placeholder="050-123-4567" defaultValue={values.phone ?? phone}
              hint="נאמת אותו בהודעת וואטסאפ אחת. כך העוזר בוואטסאפ מזהה אותך, ואת ההנחה שלך." />
       <FormError message={state.error} />
+      <p className="text-[12px] text-ink-2">
+        בהרשמה אני מסכים/ה ל<Link href="/privacy" target="_blank" className="underline underline-offset-2">מדיניות הפרטיות</Link>.
+      </p>
       <SubmitButton pending={pending}>להרשמה</SubmitButton>
       <p className="text-center text-[13px] text-ink-2">
         כבר יש חשבון? <Link href="/login" className="font-semibold text-brand-hover">כניסה</Link>

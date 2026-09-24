@@ -24,6 +24,14 @@ export default async function NewWorkoutPage() {
     <>
       <PageHeader title="אימון חדש" subtitle="בוחרים סוג פעילות — והטיימר מתחיל" />
       <WorkoutPicker units={profile.units} />
+      {/* הסבר לפני בקשת הרשאת המיקום (docs/spec-gps-map-share.md, "מדיניות פרטיות") */}
+      <p className="flex items-start gap-2 text-[12.5px] leading-relaxed text-ink-2">
+        <span className="ms text-[17px] text-brand-icon" aria-hidden>my_location</span>
+        <span>
+          בריצה, הליכה ואופניים המרחק נמדד ב-GPS — הדפדפן יבקש הרשאת מיקום. המסלול נשמר רק לך, עד שבוחרים
+          לשתף. <a href="/privacy" className="underline underline-offset-2">מדיניות הפרטיות</a>
+        </span>
+      </p>
       <div className="flex items-start gap-3 rounded-[18px] bg-brand-soft px-4 py-3.5 lg:max-w-xl">
         <span className="ms text-[19px] text-brand-icon" aria-hidden>bolt</span>
         <p className="text-[12.5px] leading-relaxed text-brand-soft-ink">{insight}</p>

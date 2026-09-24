@@ -3,6 +3,8 @@ import { signOut } from "@/app/actions/auth";
 import { Card, PageHeader } from "@/components/app-ui";
 import { requireVerifiedProfile } from "@/lib/auth";
 import { formatPhone } from "@/lib/phone";
+import Link from "next/link";
+import { DeleteAccount } from "./delete-account";
 import { ProfileSettings } from "./profile-settings";
 
 export const metadata: Metadata = { title: "פרופיל · Wellbeing" };
@@ -47,6 +49,10 @@ export default async function ProfilePage() {
         <p className="text-center text-[12px] text-ink-3">
           להחלפת מספר טלפון — צריך לאמת אותו מחדש. כתבו לעוזר בוואטסאפ &quot;נציג&quot;.
         </p>
+        <div className="flex items-center justify-center gap-4 text-[12.5px] text-ink-2">
+          <Link href="/privacy" className="underline underline-offset-2">מדיניות פרטיות</Link>
+          <DeleteAccount />
+        </div>
       </div>
     </>
   );

@@ -2,12 +2,14 @@
 // נשמרות רק חותמות זמן: הזמן שעבר מחושב מהן, ולא מספירת שניות — setInterval לא מדויק,
 // ולא רץ כשהטאב ברקע (tech-stack.md, נקודת זהירות 3).
 import type { ActivityType } from "@/lib/activity";
+import type { Route } from "@/lib/geo";
 
 export type LiveState = {
   type: ActivityType;
   startedAt: number; // ms
   pausedAt: number | null; // ms, כשהאימון מושהה
   pausedTotal: number; // ms של השהיות שהסתיימו
+  route?: Route; // נקודות GPS, בקטעים. רק לריצה, הליכה ואופניים (docs/spec-gps-map-share.md)
 };
 
 const KEY = "wellbeing.liveWorkout";
@@ -46,6 +48,13 @@ export function pause(state: LiveState, now = Date.now()): LiveState {
   return state.pausedAt ? state : { ...state, pausedAt: now };
 }
 
+// אחרי השהיה נפתח קטע חדש במסלול — כדי שהמפה לא תמתח קו ישר מהנקודה שלפני ההשהיה
 export function resume(state: LiveState, now = Date.now()): LiveState {
-  return state.pausedAt ? { ...state, pausedAt: null, pausedTotal: state.pausedTotal + (now - state.pausedAt) } : state;
+  if (!state.pausedAt) return state;
+  return {
+    ...state,
+    pausedAt: null,
+    pausedTotal: state.pausedTotal + (now - state.pausedAt),
+    route: state.route ? [...state.route, []] : state.route,
+  };
 }

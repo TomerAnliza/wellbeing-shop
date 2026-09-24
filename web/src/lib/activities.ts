@@ -13,6 +13,7 @@ export type Activity = {
   distance_km: number | null;
   calories: number;
   is_estimated: boolean;
+  distance_source: "estimated" | "gps";
 };
 
 export type Dashboard = {
@@ -35,7 +36,7 @@ export async function getDashboard(profile: Profile, now = new Date()): Promise<
   const since = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from("activities")
-    .select("id, type, started_at, ended_at, duration_minutes, distance_km, calories, is_estimated")
+    .select("id, type, started_at, ended_at, duration_minutes, distance_km, calories, is_estimated, distance_source")
     .gte("started_at", since)
     .order("started_at", { ascending: false });
   if (error) throw new Error("activities query failed: " + error.message);

@@ -15,8 +15,9 @@ const FEATURES = [
 ];
 
 // דף תדמית למי שלא מחובר. מחובר עובר ישר ל"היום" (docs/spec-auth-and-app.md)
-export default async function LandingPage() {
+export default async function LandingPage(props: PageProps<"/">) {
   if (await getProfile()) redirect("/app");
+  const { deleted } = await props.searchParams;
 
   return (
     <div className="min-h-screen bg-screen">
@@ -29,6 +30,11 @@ export default async function LandingPage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-5 pt-10 pb-20 lg:px-8 lg:pt-20">
+        {deleted === "1" && (
+          <p role="status" className="mb-8 rounded-[14px] bg-brand-soft px-4 py-3 text-[14px] text-brand-soft-ink">
+            החשבון נמחק, יחד עם כל האימונים והמסלולים. תודה שהייתם איתנו.
+          </p>
+        )}
         <section className="max-w-2xl">
           <h1 className="text-[34px] leading-tight font-semibold tracking-tight lg:text-[52px]">
             להתחיל אימון בלחיצה.
@@ -59,7 +65,8 @@ export default async function LandingPage() {
         </section>
 
         <p className="mt-10 text-[12px] text-ink-3">
-          מרחק, קצב וקלוריות מחושבים מזמן האימון, ומסומנים כהערכה. אין כאן GPS ואין ייעוץ רפואי.
+          בריצה, הליכה ואופניים המרחק נמדד ב-GPS. קלוריות הן תמיד הערכה. אין כאן ייעוץ רפואי.{" "}
+          <Link href="/privacy" className="underline underline-offset-2">מדיניות פרטיות</Link>
         </p>
       </main>
     </div>
