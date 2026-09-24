@@ -56,7 +56,9 @@ export async function saveActivity(input: {
   });
   // RLS דוחה שמירה בלי טלפון מאומת או על שם משתמש אחר
   if (error) {
-    console.error("saveActivity: insert failed", error.code, error.message, error.details);
+    console.error("saveActivity: insert failed", error.code, error.message,
+      JSON.stringify({ type: input.type, activeSecondsIn: input.activeSeconds, typeofActive: typeof input.activeSeconds,
+        wallSeconds, activeSeconds, minutes, calories, estimatedKm, gpsKm, points: route.reduce((n, s) => n + s.length, 0) }));
     return { ok: false, error: "לא הצלחנו לשמור. האימון לא נמחק — נסו שוב." };
   }
 
