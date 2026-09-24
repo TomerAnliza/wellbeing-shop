@@ -14,6 +14,7 @@ export function LoginForm({ next }: { next: string }) {
       <Field label="אימייל" name="email" type="email" autoComplete="email" dir="ltr" inputMode="email"
              defaultValue={state.values?.email} />
       <Field label="סיסמה" name="password" type="password" autoComplete="current-password" dir="ltr" />
+      <Link href="/forgot-password" className="-mt-2 self-start text-[12.5px] text-ink-2 hover:text-ink">שכחתי סיסמה</Link>
       <FormError message={state.error} />
       <SubmitButton pending={pending}>כניסה</SubmitButton>
       <p className="text-center text-[13px] text-ink-2">

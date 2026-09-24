@@ -1,0 +1,286 @@
+{
+ "name": "wellbeing — מיילי התחברות (Supabase)",
+ "nodes": [
+  {
+   "id": "c8fc8392-5f40-5479-9201-2672fede1767",
+   "name": "הסבר",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    -40,
+    -260
+   ],
+   "parameters": {
+    "width": 620,
+    "height": 200,
+    "color": 7,
+    "content": "## מיילי התחברות — wellbeing\nSupabase קורא לכאן במקום לשלוח מייל בעצמו (Send Email Hook). בודקים חתימה\n(Standard Webhooks, הסוד במשתנה הסביבה SUPABASE_EMAIL_HOOK_SECRET), בונים מייל בעברית,\nושולחים ב-Gmail. 200 = נשלח. 401 = חתימה לא תקינה. 500 = Gmail נכשל.\nאפיון: docs/spec-auth-and-app.md"
+   }
+  },
+  {
+   "id": "f2fb6d06-63fa-51d0-ba1c-72719b488cbc",
+   "name": "Supabase — מייל לשליחה",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    0,
+    0
+   ],
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "wellbeing-auth-email",
+    "responseMode": "responseNode",
+    "options": {
+     "rawBody": true
+    }
+   },
+   "webhookId": "983284b6-69d7-5141-8477-30c717ecb591"
+  },
+  {
+   "id": "1d767638-4000-55a6-8e82-9d6b802ef09e",
+   "name": "בדיקת חתימה",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    280,
+    0
+   ],
+   "parameters": {
+    "jsCode": "// ── בדיקת חתימה ──────────────────────────────────────────────\n// Supabase חותם כל קריאה ל-Send Email Hook לפי Standard Webhooks:\n//   תוכן חתום = \"<webhook-id>.<webhook-timestamp>.<הגוף הגולמי>\"\n//   מפתח     = base64-decode של הסוד, בלי הקידומת \"v1,whsec_\"\n//   חתימה    = \"v1,<base64 של HMAC-SHA256>\" — ייתכנו כמה, מופרדות ברווח\n// הסוד: משתנה הסביבה SUPABASE_EMAIL_HOOK_SECRET של n8n. בקשה ישנה מ-5 דקות — נדחית.\n// פלט תמיד פריט אחד: { valid, reason?, payload? } — הצומת הבא מחליט אם לשלוח או להחזיר 401\n\nconst crypto = require('crypto');\n\nconst request = $input.first();\nconst headers = request.json.headers ?? {};\nconst secret = String($env.SUPABASE_EMAIL_HOOK_SECRET ?? '');\nconst id = String(headers['webhook-id'] ?? '');\nconst timestamp = String(headers['webhook-timestamp'] ?? '');\nconst signatures = String(headers['webhook-signature'] ?? '').split(' ');\n\nconst reject = reason => [{ json: { valid: false, reason } }];\n\nif (!secret.startsWith('v1,whsec_')) return reject('missing secret');\nif (!id || !timestamp || !signatures[0]) return reject('missing headers');\nif (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return reject('stale timestamp');\n\nconst rawBody = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst key = Buffer.from(secret.slice('v1,whsec_'.length), 'base64');\nconst expected = crypto\n  .createHmac('sha256', key)\n  .update(`${id}.${timestamp}.`)\n  .update(rawBody)\n  .digest('base64');\n\nconst matches = signatures.some(signature => {\n  const value = signature.startsWith('v1,') ? signature.slice(3) : '';\n  return (\n    value.length === expected.length &&\n    crypto.timingSafeEqual(Buffer.from(value), Buffer.from(expected))\n  );\n});\n\nif (!matches) return reject('bad signature');\n\nreturn [{ json: { valid: true, payload: JSON.parse(rawBody.toString('utf8')) } }];\n"
+   }
+  },
+  {
+   "id": "d756ded1-1317-53c9-bfae-1986e950e4ea",
+   "name": "חתימה תקינה?",
+   "type": "n8n-nodes-base.switch",
+   "typeVersion": 3.3,
+   "position": [
+    560,
+    0
+   ],
+   "parameters": {
+    "rules": {
+     "values": [
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "conditions": [
+         {
+          "id": "d172d34e-4caf-58c1-87f3-3690c12b6273",
+          "leftValue": "={{ $json.valid }}",
+          "rightValue": "",
+          "operator": {
+           "type": "boolean",
+           "operation": "true",
+           "singleValue": true
+          }
+         }
+        ],
+        "combinator": "and"
+       },
+       "renameOutput": true,
+       "outputKey": "תקינה"
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "conditions": [
+         {
+          "id": "b3370438-db56-5922-8368-193815f65ce6",
+          "leftValue": "={{ $json.valid }}",
+          "rightValue": "",
+          "operator": {
+           "type": "boolean",
+           "operation": "false",
+           "singleValue": true
+          }
+         }
+        ],
+        "combinator": "and"
+       },
+       "renameOutput": true,
+       "outputKey": "לא תקינה"
+      }
+     ]
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "a674c0da-03c9-569f-90c9-9f10c9b91a56",
+   "name": "בניית מייל",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    840,
+    -100
+   ],
+   "parameters": {
+    "jsCode": "// ── בניית מייל ───────────────────────────────────────────────\n// Supabase שולח { user, email_data }. email_data.email_action_type אומר איזה מייל:\n//   recovery — איפוס סיסמה. הקישור מוביל לאתר שלנו (/auth/confirm), שמאמת אותו בשרת\n//   אחר      — מייל כללי עם הקוד (בפועל לא נשלח: אישור אימייל כבוי, ואין שינוי אימייל)\n// כתובת האתר: מ-redirect_to, ש-Supabase כבר בדק מול רשימת הכתובות המותרות.\n\nconst { user, email_data: data } = $input.first().json.payload;\n\nconst site = new URL(data.redirect_to || data.site_url).origin;\nconst name = user.user_metadata?.display_name || '';\nconst hello = name ? `היי ${name},` : 'היי,';\n\nconst esc = value =>\n  String(value ?? '').replace(\n    /[&<>\"]/g,\n    c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' })[c],\n  );\n\nlet subject, title, lines, button;\n\nif (data.email_action_type === 'recovery') {\n  const link =\n    `${site}/auth/confirm?type=recovery&next=%2Freset-password` +\n    `&token_hash=${encodeURIComponent(data.token_hash)}`;\n  subject = 'איפוס הסיסמה שלך — Wellbeing';\n  title = 'איפוס סיסמה';\n  lines = [\n    hello,\n    'קיבלנו בקשה לאפס את הסיסמה לחשבון שלך. הקישור תקף לשעה, ועובד פעם אחת.',\n    'לא ביקשת? אפשר להתעלם מהמייל — הסיסמה לא משתנה.',\n  ];\n  button = { href: link, label: 'לבחירת סיסמה חדשה' };\n} else {\n  subject = 'קוד אימות — Wellbeing';\n  title = 'קוד אימות';\n  lines = [hello, `קוד האימות שלך: <b dir=\"ltr\">${esc(data.token)}</b>`, 'הקוד תקף לשעה.'];\n  button = null;\n}\n\nconst html = `<div dir=\"rtl\" style=\"font-family:Arial,sans-serif;max-width:520px;margin:auto;background:#f7f4ef;padding:24px;border-radius:18px\">\n  <div style=\"font-size:20px;font-weight:bold;color:#1c1b19;margin-bottom:6px\">💜 Wellbeing</div>\n  <div style=\"background:#fffdf8;border:1px solid #ece8e1;border-radius:16px;padding:22px\">\n    <div style=\"font-size:18px;font-weight:bold;color:#1c1b19;margin-bottom:12px\">${title}</div>\n    ${lines.map(line => `<p style=\"margin:0 0 10px;color:#3a3833;font-size:15px;line-height:1.6\">${line.startsWith('קוד') ? line : esc(line)}</p>`).join('')}\n    ${\n      button\n        ? `<p style=\"margin:18px 0 6px\"><a href=\"${esc(button.href)}\" style=\"background:#9372C8;color:#fff;padding:12px 20px;border-radius:12px;text-decoration:none;font-weight:bold;display:inline-block\">${button.label}</a></p>`\n        : ''\n    }\n  </div>\n  <p style=\"color:#8a8494;font-size:12px;text-align:center;margin-top:14px\">המייל נשלח אוטומטית מ-Wellbeing. לא צריך להשיב לו.</p>\n</div>`;\n\nreturn [{ json: { to: user.email, subject, html } }];\n"
+   }
+  },
+  {
+   "id": "064c8d49-9244-5523-9d9e-111a6b77eb0f",
+   "name": "שליחה ב-Gmail",
+   "type": "n8n-nodes-base.gmail",
+   "typeVersion": 2.1,
+   "position": [
+    1120,
+    -100
+   ],
+   "parameters": {
+    "sendTo": "={{ $json.to }}",
+    "subject": "={{ $json.subject }}",
+    "message": "={{ $json.html }}",
+    "options": {
+     "appendAttribution": false
+    }
+   },
+   "credentials": {
+    "gmailOAuth2": {
+     "id": "JIDO13CagcFy9pSV",
+     "name": "Gmail — tomer@analiza (wellbeing)"
+    }
+   },
+   "onError": "continueErrorOutput"
+  },
+  {
+   "id": "5eb28bc4-97bb-52c9-931a-89be544d58d3",
+   "name": "200 — נשלח",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.4,
+   "position": [
+    1400,
+    -180
+   ],
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "{}",
+    "options": {
+     "responseCode": 200
+    }
+   }
+  },
+  {
+   "id": "1d1e078e-4ba7-5b1f-9d7c-5415bc1f6317",
+   "name": "500 — Gmail נכשל",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.4,
+   "position": [
+    1400,
+    -20
+   ],
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "{}",
+    "options": {
+     "responseCode": 500
+    }
+   }
+  },
+  {
+   "id": "08c037b9-65cd-5413-b200-8bdbd1c47653",
+   "name": "401 — חתימה לא תקינה",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.4,
+   "position": [
+    840,
+    140
+   ],
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "{}",
+    "options": {
+     "responseCode": 401
+    }
+   }
+  }
+ ],
+ "connections": {
+  "Supabase — מייל לשליחה": {
+   "main": [
+    [
+     {
+      "node": "בדיקת חתימה",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "בדיקת חתימה": {
+   "main": [
+    [
+     {
+      "node": "חתימה תקינה?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "חתימה תקינה?": {
+   "main": [
+    [
+     {
+      "node": "בניית מייל",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "401 — חתימה לא תקינה",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "בניית מייל": {
+   "main": [
+    [
+     {
+      "node": "שליחה ב-Gmail",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "שליחה ב-Gmail": {
+   "main": [
+    [
+     {
+      "node": "200 — נשלח",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "500 — Gmail נכשל",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1",
+  "timezone": "Asia/Jerusalem",
+  "saveDataSuccessExecution": "none",
+  "saveDataErrorExecution": "all"
+ }
+}

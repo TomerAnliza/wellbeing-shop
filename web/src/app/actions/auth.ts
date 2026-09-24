@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getProfile, safeNext } from "@/lib/auth";
 import { normalizePhone } from "@/lib/phone";
@@ -17,6 +18,8 @@ const AUTH_ERRORS: Record<string, string> = {
   weak_password: "הסיסמה חלשה מדי. צריך 8 תווים לפחות.",
   email_address_invalid: "כתובת האימייל לא תקינה.",
   over_request_rate_limit: "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.",
+  over_email_send_rate_limit: "שלחנו כבר כמה מיילים בזמן קצר. נסו שוב בעוד כמה דקות.",
+  same_password: "הסיסמה החדשה זהה לקודמת. בחרו סיסמה אחרת.",
 };
 const authError = (code?: string) => AUTH_ERRORS[code ?? ""] ?? "משהו השתבש. נסו שוב בעוד רגע.";
 
@@ -89,4 +92,39 @@ export async function changePhone(_prev: FormState, formData: FormData): Promise
 
   revalidatePath("/verify-phone");
   return {};
+}
+
+// ── שחזור סיסמה ─────────────────────────────────────────────────────
+// Supabase יוצר את הקישור, ו-n8n שולח את המייל (Send Email Hook — docs/spec-auth-and-app.md)
+
+/** בקשת קישור איפוס. התשובה זהה לכל אימייל — לא חושפים אילו אימיילים רשומים */
+export async function requestPasswordReset(_prev: FormState, formData: FormData): Promise<FormState & { sent?: boolean }> {
+  const email = text(formData, "email");
+  if (!email.includes("@")) return { error: "כתובת האימייל לא תקינה.", values: { email } };
+
+  // הכתובת שממנה הגיעה הבקשה — כדי שהקישור במייל יחזור לאותו אתר (פרודקשן או מקומי).
+  // Supabase בודק אותה מול רשימת הכתובות המותרות
+  const h = await headers();
+  const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${origin}/reset-password` });
+  if (error && (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit")) {
+    return { error: authError(error.code), values: { email } };
+  }
+  return { sent: true, values: { email } };
+}
+
+/** סיסמה חדשה. ה-session הגיע מהקישור במייל (/auth/confirm) */
+export async function setNewPassword(_prev: FormState, formData: FormData): Promise<FormState> {
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+  if (password.length < 8) return { error: "סיסמה של 8 תווים לפחות." };
+  if (password !== confirm) return { error: "שתי הסיסמאות לא זהות." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: authError(error.code) };
+
+  redirect("/app?password=1");
 }

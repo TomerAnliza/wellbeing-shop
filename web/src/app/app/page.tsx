@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "היום · Wellbeing" };
 // docs/spec-mvp-screens.md + ההחלטות ב-docs/spec-auth-and-app.md
 export default async function TodayPage(props: PageProps<"/app">) {
   const profile = await requireVerifiedProfile("/app");
-  const { saved } = await props.searchParams;
+  const { saved, password } = await props.searchParams;
   const now = new Date();
   const { recent, week, streak } = await getDashboard(profile, now);
   const tz = profile.timezone;
@@ -85,6 +85,7 @@ export default async function TodayPage(props: PageProps<"/app">) {
       </div>
 
       {saved === "1" && <Toast message="האימון נשמר" />}
+      {password === "1" && <Toast message="הסיסמה עודכנה" />}
     </>
   );
 }
