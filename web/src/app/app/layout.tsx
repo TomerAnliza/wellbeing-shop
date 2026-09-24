@@ -1,3 +1,4 @@
+import { ActiveWorkoutBanner } from "@/components/active-workout-banner";
 import { AccountLink, TabBar, TopNav } from "@/components/tab-bar";
 import { WhatsAppFab } from "@/components/whatsapp-fab";
 import { getProfile } from "@/lib/auth";
@@ -21,6 +22,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
         <TabBar />
       </div>
       <WhatsAppFab />
+      {account && <ActiveWorkoutBanner />}
     </div>
   );
 }
