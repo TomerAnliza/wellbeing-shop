@@ -55,7 +55,10 @@ export async function saveActivity(input: {
     route: gpsKm !== null ? simplifyRoute(route) : null, // המסלול נשמר רק כשהמדידה אמינה
   });
   // RLS דוחה שמירה בלי טלפון מאומת או על שם משתמש אחר
-  if (error) return { ok: false, error: "לא הצלחנו לשמור. האימון לא נמחק — נסו שוב." };
+  if (error) {
+    console.error("saveActivity: insert failed", error.code, error.message, error.details);
+    return { ok: false, error: "לא הצלחנו לשמור. האימון לא נמחק — נסו שוב." };
+  }
 
   revalidatePath("/app", "layout");
   return { ok: true };
