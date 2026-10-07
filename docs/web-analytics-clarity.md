@@ -132,6 +132,10 @@ POST https://l.clarity.ms/collect                   ← ההקלטה. האות �
 
 ואותה בדיקה אחרי build **בלי** `VERCEL_ENV`: בארבעת הדפים `tag=False` ו-`requests=0`.
 
+**בפרודקשן**, אחרי הדיפלוי של `df132d0`, אותה בדיקה מול https://wellbeing-shop.vercel.app: אותן
+תוצאות בדיוק — `POST /collect` ב-`/`, `/login` ו-`/privacy`, ואפס בקשות ב-`/share/...`. דף
+הפרטיות החי מציג את התאריך 7 באוקטובר 2026 ואת הסעיף על Clarity ו-`MUID`.
+
 ## הגדרות בלוח הבקרה של Clarity
 
 | הגדרה | ערך | איפה |
