@@ -95,6 +95,7 @@ export function AccountLink({ account }: { account: Account }) {
     <Link
       href="/app/profile"
       aria-label={`הפרופיל של ${account.name}`}
+      data-clarity-mask="true"
       className="flex size-10 items-center justify-center rounded-full bg-brand-soft text-[15px] font-semibold text-brand-soft-ink hover:ring-2 hover:ring-brand/30"
     >
       {account.name.trim().charAt(0) || "?"}

@@ -28,7 +28,7 @@ export default async function VerifyPhonePage() {
     <div className="rounded-[26px] border border-card-border bg-card p-6 shadow-[0_18px_40px_-28px_rgba(28,27,25,0.35)]">
       <h1 className="text-[23px] font-semibold tracking-tight">עוד צעד אחד</h1>
       <p className="mt-1 text-[14px] leading-relaxed text-ink-2">
-        שלחו לנו את הקוד בוואטסאפ, <b className="text-ink">מהמספר <span dir="ltr">{formatPhone(profile.phone)}</span></b>.
+        שלחו לנו את הקוד בוואטסאפ, <b className="text-ink">מהמספר <span dir="ltr" data-clarity-mask="true">{formatPhone(profile.phone)}</span></b>.
         כך נדע שהמספר באמת שלך.
       </p>
 

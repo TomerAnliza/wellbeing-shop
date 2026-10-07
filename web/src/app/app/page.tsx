@@ -24,7 +24,7 @@ export default async function TodayPage(props: PageProps<"/app">) {
       <header className="flex items-start justify-between gap-3 pe-12 lg:pe-0">
         <div>
           <h1 className="text-[23px] font-semibold tracking-tight lg:text-[30px]">
-            {greeting(now, tz)}, {firstName}
+            {greeting(now, tz)}, <span data-clarity-mask="true">{firstName}</span>
           </h1>
           <p className="mt-0.5 text-[13px] text-ink-2 lg:text-[15px]">{longDate(now, tz)}</p>
         </div>

@@ -16,7 +16,8 @@ export default function RouteMap({ route, className = "" }: { route: Route; clas
   const end = all[all.length - 1];
 
   return (
-    <div dir="ltr" className={`overflow-hidden rounded-[22px] border border-card-border ${className}`}>
+    // data-clarity-mask: המסלול מתחיל ונגמר ליד הבית — לא נכנס להקלטות (docs/web-analytics-clarity.md)
+    <div dir="ltr" data-clarity-mask="true" className={`overflow-hidden rounded-[22px] border border-card-border ${className}`}>
       <MapContainer
         bounds={all}
         boundsOptions={{ padding: [24, 24] }}

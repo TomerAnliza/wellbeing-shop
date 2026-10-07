@@ -21,14 +21,14 @@ export default async function ProfilePage() {
       <PageHeader title="פרופיל" />
       <div className="flex flex-col gap-4 lg:max-w-lg">
         <Card className="flex items-center gap-4 p-5">
-          <div className="flex size-14 items-center justify-center rounded-full bg-brand-neutral text-[20px] font-semibold text-brand-hover">
+          <div data-clarity-mask="true" className="flex size-14 items-center justify-center rounded-full bg-brand-neutral text-[20px] font-semibold text-brand-hover">
             {profile.display_name.charAt(0)}
           </div>
           <div>
-            <div className="text-[17px] font-semibold">{profile.display_name}</div>
+            <div data-clarity-mask="true" className="text-[17px] font-semibold">{profile.display_name}</div>
             <div className="mt-0.5 text-[12.5px] text-ink-2">איתנו מאז {since}</div>
             <div className="mt-1 flex items-center gap-1 text-[12.5px] text-ink-2">
-              <span dir="ltr">{formatPhone(profile.phone)}</span>
+              <span dir="ltr" data-clarity-mask="true">{formatPhone(profile.phone)}</span>
               <span className="ms text-[15px] text-[oklch(0.55_0.12_150)]" aria-label="מאומת">verified</span>
             </div>
           </div>

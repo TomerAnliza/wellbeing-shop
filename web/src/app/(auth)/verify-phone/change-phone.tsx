@@ -16,7 +16,7 @@ export function ChangePhone({ current }: { current: string }) {
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="text-start text-[13px] text-ink-2 underline-offset-2 hover:underline">
-        המספר <span dir="ltr">{current}</span> לא נכון?
+        המספר <span dir="ltr" data-clarity-mask="true">{current}</span> לא נכון?
       </button>
     );
   }

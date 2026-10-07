@@ -42,7 +42,7 @@ export function ProfileSettings(initial: Settings) {
           </form>
         ) : (
           <button onClick={() => setEditingName(true)} className="flex items-center gap-1 text-[13px] text-ink-2 hover:text-ink">
-            {settings.name}
+            <span data-clarity-mask="true">{settings.name}</span>
             <span className="ms text-[16px]" aria-hidden>edit</span>
           </button>
         )}

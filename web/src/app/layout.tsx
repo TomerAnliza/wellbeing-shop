@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
+import { Clarity } from "@/components/clarity";
 import "./globals.css";
 
 // Rubik — הגופן שבעיצוב (docs/design-system.md), בתת-קבוצה עברית
@@ -16,6 +17,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#f7f4ef" };
 
+// Microsoft Clarity — רק בפרודקשן של Vercel, לא בפיתוח מקומי ולא ב-Preview.
+// VERCEL_ENV זמין בשרת בזמן build ובזמן ריצה. המזהה ציבורי (docs/web-analytics-clarity.md)
+const CLARITY_PROJECT_ID = process.env.VERCEL_ENV === "production" ? "ytw3b7uf8r" : undefined;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     // האפליקציה כולה בעברית ו-RTL. כיווניות נקבעת כאן, פעם אחת, לכל הדפים
@@ -27,7 +32,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=block"
         />
       </head>
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {children}
+        <Clarity projectId={CLARITY_PROJECT_ID} />
+      </body>
     </html>
   );
 }
